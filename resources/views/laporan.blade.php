@@ -1,0 +1,356 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-semibold">Laporan & Analitik</h2>
+            <p class="text-gray-600">
+                Lihat dan unduh laporan detail bisnis Anda
+            </p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <!-- Calendar Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10m-6 4h6m-2 4h2M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+                </svg>
+                <select class="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option>Minggu Ini</option>
+                    <option>Bulan Ini</option>
+                    <option>Kuartal Ini</option>
+                    <option>Tahun Ini</option>
+                    <option>Rentang Custom</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg p-4 shadow">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-600">Total Penjualan</h3>
+                <!-- Shopping Cart -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 6h13M7 13H3"/>
+                </svg>
+            </div>
+            <p class="text-2xl font-semibold mt-2">IDR 0M</p>
+            <div class="flex items-center gap-1 text-xs text-green-600 mt-1">
+                <!-- Arrow Up -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                <span>12.5% dari periode sebelumnya</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 shadow">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-600">Nilai Material</h3>
+                <!-- Package Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M20 12V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v4m18 0l-9 5-9-5m18 0v4a2 2 0 01-1 1.73l-7 4a2 2 0 01-2 0l-7-4A2 2 0 012 16v-4"/>
+                </svg>
+            </div>
+            <p class="text-2xl font-semibold mt-2">IDR 0M</p>
+            <p class="text-xs text-gray-600 mt-1">0 unit dalam stok</p>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 shadow">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-600">Stok Rendah</h3>
+                <!-- Warning Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.29 3.86L1.82 18a1 1 0 00.86 1.5h18.64a1 1 0 00.86-1.5L13.71 3.86a1 1 0 00-1.72 0zM12 9v4m0 4h.01"/>
+                </svg>
+            </div>
+            <p class="text-2xl text-yellow-600 font-semibold mt-2">0</p>
+            <p class="text-xs text-gray-600 mt-1">Item perlu di-reorder</p>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 shadow">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-600">Pelanggan Baru</h3>
+                <!-- Users Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m0 0A4 4 0 0112 7a4 4 0 013 7.13M12 7a4 4 0 00-3 7.13M12 7V4m0 0a4 4 0 013 7.13M12 4a4 4 0 00-3 7.13"/>
+                </svg>
+            </div>
+            <p class="text-2xl font-semibold mt-2">0</p>
+            <p class="text-xs text-gray-600 mt-1">0 pesanan berulang</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+<div class="space-y-6 p-6" x-data="{ tab: 'inventory' }">
+  <div class="flex border-b">
+    <button @click="tab = 'inventory'"
+      :class="tab === 'inventory' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'"
+      class="px-4 py-2 font-medium transition">
+      📦 Laporan Inventori
+    </button>
+    <button @click="tab = 'sales'"
+      :class="tab === 'sales' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-600'"
+      class="px-4 py-2 font-medium transition">
+      💰 Laporan Penjualan
+    </button>
+    <button @click="tab = 'financial'"
+      :class="tab === 'financial' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-600'"
+      class="px-4 py-2 font-medium transition">
+      📊 Laporan Keuangan
+    </button>
+  </div>
+
+  {{-- INVENTORY REPORT --}}
+  <div x-show="tab === 'inventory'" class="space-y-6">
+    <div class="border rounded-xl bg-white shadow-sm">
+      <div class="flex justify-between items-start border-b p-4">
+        <div>
+          <h3 class="text-lg font-semibold">Laporan Inventori Material</h3>
+          <p class="text-gray-500 text-sm">Level stok bahan baku, penggunaan, dan peringatan stok rendah</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="border rounded-lg px-3 py-2 text-sm hover:bg-gray-100">📄 Export PDF</button>
+          <button class="border rounded-lg px-3 py-2 text-sm hover:bg-gray-100">⬇️ Export Excel</button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-6">
+        {{-- Inventory Summary --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-sm text-gray-600">Total Material</p><p class="text-2xl font-semibold">124</p></div>
+          <div><p class="text-sm text-gray-600">Total Nilai</p><p class="text-2xl font-semibold">IDR 2.5M</p></div>
+          <div><p class="text-sm text-gray-600">Stok Rendah</p><p class="text-2xl text-yellow-600 font-semibold">8</p></div>
+          <div><p class="text-sm text-gray-600">Habis Stok</p><p class="text-2xl text-red-600 font-semibold">2</p></div>
+        </div>
+
+        {{-- Stock Table --}}
+        <div>
+          <h3 class="font-semibold mb-3">Stok Material</h3>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left">Material</th>
+                  <th class="px-4 py-2 text-left">SKU</th>
+                  <th class="px-4 py-2 text-right">Stok</th>
+                  <th class="px-4 py-2 text-right">Nilai (IDR)</th>
+                  <th class="px-4 py-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <tr>
+                  <td class="px-4 py-2">Kulit Sapi Premium</td>
+                  <td class="px-4 py-2">MAT-001</td>
+                  <td class="px-4 py-2 text-right">120 m²</td>
+                  <td class="px-4 py-2 text-right">18,000,000</td>
+                  <td class="px-4 py-2"><span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Sehat</span></td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2">Benang Jahit Hitam</td>
+                  <td class="px-4 py-2">MAT-002</td>
+                  <td class="px-4 py-2 text-right">5 roll</td>
+                  <td class="px-4 py-2 text-right">500,000</td>
+                  <td class="px-4 py-2"><span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">Stok Rendah</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {{-- Low Stock Alert --}}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 class="font-semibold text-yellow-800 mb-2">⚠️ Peringatan Stok Rendah</h3>
+          <ul class="text-sm text-yellow-700 space-y-1">
+            <li>Karet Sol – Stok: 2 roll (Reorder: 5 roll)</li>
+            <li>Kulit Domba – Stok: 3 m² (Reorder: 10 m²)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- SALES REPORT --}}
+  <div x-show="tab === 'sales'" class="space-y-6">
+    <div class="border rounded-xl bg-white shadow-sm">
+      <div class="flex justify-between items-start border-b p-4">
+        <div>
+          <h3 class="text-lg font-semibold">Laporan Penjualan</h3>
+          <p class="text-gray-500 text-sm">Performa penjualan detail dan insight pelanggan</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="border rounded-lg px-3 py-2 text-sm hover:bg-gray-100">📄 Export PDF</button>
+          <button class="border rounded-lg px-3 py-2 text-sm hover:bg-gray-100">⬇️ Export Excel</button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-6">
+        {{-- Sales Summary --}}
+        <div class="grid grid-cols-3 gap-4">
+          <div><p class="text-sm text-gray-600">Total Pesanan</p><p class="text-2xl font-semibold">320</p></div>
+          <div><p class="text-sm text-gray-600">Rata-rata Nilai Pesanan</p><p class="text-2xl font-semibold">IDR 750K</p></div>
+          <div><p class="text-sm text-gray-600">Tingkat Konversi</p><p class="text-2xl font-semibold">68%</p></div>
+        </div>
+
+        {{-- Top Products --}}
+        <div>
+          <h3 class="font-semibold mb-3">Produk Terlaris</h3>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left">Produk</th>
+                  <th class="px-4 py-2 text-left">SKU</th>
+                  <th class="px-4 py-2 text-right">Jumlah</th>
+                  <th class="px-4 py-2 text-right">Pendapatan (IDR)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <tr>
+                  <td class="px-4 py-2">Sepatu Kasual Pria</td>
+                  <td class="px-4 py-2">PRD-001</td>
+                  <td class="px-4 py-2 text-right">120</td>
+                  <td class="px-4 py-2 text-right">90,000,000</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2">Sepatu Kulit Wanita</td>
+                  <td class="px-4 py-2">PRD-002</td>
+                  <td class="px-4 py-2 text-right">85</td>
+                  <td class="px-4 py-2 text-right">68,000,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {{-- Sales by Category --}}
+        <div>
+          <h3 class="font-semibold mb-3">Penjualan per Kategori</h3>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-sm">
+                <span>Kulit Asli</span>
+                <span>IDR 1.2M (45%)</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full mt-1">
+                <div class="h-2 bg-blue-500 rounded-full w-[45%]"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm">
+                <span>Canvas</span>
+                <span>IDR 0.8M (30%)</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full mt-1">
+                <div class="h-2 bg-blue-400 rounded-full w-[30%]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- FINANCIAL REPORT --}}
+  <div x-show="tab === 'financial'" class="space-y-6">
+    <div class="border rounded-xl bg-white shadow-sm">
+      <div class="flex justify-between items-start border-b p-4">
+        <div>
+          <h3 class="text-lg font-semibold">Laporan Keuangan</h3>
+          <p class="text-gray-500 text-sm">Analisis keuangan komprehensif untuk periode yang dipilih</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="border rounded-lg px-3 py-2 text-sm hover:bg-gray-100">📄 Export PDF</button>
+          <button class="border rounded-lg px-3 py-2 text-sm hover:bg-gray-100">⬇️ Export Excel</button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-6">
+        {{-- Financial Summary --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div><p class="text-sm text-gray-600">Total Pendapatan</p><p class="text-2xl text-green-600 font-semibold">IDR 5.4M</p></div>
+          <div><p class="text-sm text-gray-600">Total Pengeluaran</p><p class="text-2xl text-red-600 font-semibold">IDR 3.1M</p></div>
+          <div><p class="text-sm text-gray-600">Laba Bersih</p><p class="text-2xl text-blue-600 font-semibold">IDR 2.3M</p></div>
+          <div><p class="text-sm text-gray-600">Margin Laba</p><p class="text-2xl font-semibold">42%</p></div>
+        </div>
+
+        {{-- Expense Breakdown --}}
+        <div>
+          <h3 class="font-semibold mb-3">Rincian Pengeluaran</h3>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-sm">
+                <span>Bahan Baku</span><span>IDR 1.2M (40%)</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full mt-1">
+                <div class="h-2 bg-red-500 rounded-full w-[40%]"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm">
+                <span>Operasional</span><span>IDR 0.9M (30%)</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full mt-1">
+                <div class="h-2 bg-red-400 rounded-full w-[30%]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{-- Monthly Comparison --}}
+        <div>
+          <h3 class="font-semibold mb-3">Perbandingan Bulanan</h3>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left">Bulan</th>
+                  <th class="px-4 py-2 text-right">Pendapatan</th>
+                  <th class="px-4 py-2 text-right">Pengeluaran</th>
+                  <th class="px-4 py-2 text-right">Laba</th>
+                  <th class="px-4 py-2 text-right">Margin</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <tr>
+                  <td class="px-4 py-2">Oktober</td>
+                  <td class="px-4 py-2 text-right">900,000,000</td>
+                  <td class="px-4 py-2 text-right text-red-600">540,000,000</td>
+                  <td class="px-4 py-2 text-right text-green-600">360,000,000</td>
+                  <td class="px-4 py-2 text-right">40%</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2">November</td>
+                  <td class="px-4 py-2 text-right">1,200,000,000</td>
+                  <td class="px-4 py-2 text-right text-red-600">650,000,000</td>
+                  <td class="px-4 py-2 text-right text-green-600">550,000,000</td>
+                  <td class="px-4 py-2 text-right">45%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {{-- Cash Flow --}}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 class="font-semibold mb-3">Ringkasan Arus Kas</h3>
+          <div class="grid grid-cols-3 gap-4">
+            <div><p class="text-sm text-gray-600">Masuk</p><p class="text-xl text-green-600 font-semibold">IDR 5.4M</p></div>
+            <div><p class="text-sm text-gray-600">Keluar</p><p class="text-xl text-red-600 font-semibold">IDR 3.1M</p></div>
+            <div><p class="text-sm text-gray-600">Bersih</p><p class="text-xl text-blue-600 font-semibold">IDR 2.3M</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection
