@@ -14,6 +14,8 @@ Route::view('/register', 'register')->name('register');
 // Protected routes (add auth middleware later)
 Route::get('/pesanan', [OrderController::class, 'index'])->name('order');
 Route::post('/pesanan', [OrderController::class, 'store'])->name('order.store');
+Route::post('/pesanan/production', [OrderController::class, 'storeProduction'])->name('order.production.store');
+Route::post('/pesanan/custom', [OrderController::class, 'storeCustom'])->name('order.custom.store');
 Route::put('/pesanan/{order}', [OrderController::class, 'update'])->name('order.update');
 Route::delete('/pesanan/{order}', [OrderController::class, 'destroy'])->name('order.destroy');
 

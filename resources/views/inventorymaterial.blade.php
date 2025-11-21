@@ -1,17 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="{ showMaterialDialog: false, editMode: false }">
-
-  {{-- ALERT: stok rendah --}}
-  <div class="hidden" id="lowStockAlert">
-    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.662 1.732-3L13.732 4c-.77-1.338-2.694-1.338-3.464 0L3.34 16c-.77 1.338.192 3 1.732 3z"/>
-      </svg>
-      <p><strong>Peringatan:</strong> Ada bahan dengan stok rendah yang perlu di-restock.</p>
-    </div>
-  </div>
+<div x-data="{ showMaterialDialog: false, editMode: false }" class="space-y-6">
 
   {{-- Header --}}
   <div class="flex items-center justify-between">
@@ -20,12 +10,12 @@
       <p class="text-gray-600 text-sm">Kelola bahan baku untuk produksi sepatu</p>
     </div>
 
-    <button @click="editMode = false; showMaterialDialog = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+    <button @click="editMode = false; showMaterialDialog = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
       + Tambah Bahan
     </button>
     
-  {{-- Modal Tambah Bahan --}}
-  @include('partials.inventorydialog')
+    {{-- Modal Tambah Bahan --}}
+    @include('partials.inventorydialog')
   </div>
 
   {{-- Statistik --}}
@@ -37,7 +27,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-2.586a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 0012.586 3H10a2 2 0 00-2 2v16h10a2 2 0 002-2v-6z" />
         </svg>
       </div>
-      <p class="text-2xl font-semibold">24</p>
+      <p class="text-2xl font-semibold">{{ $stats['totalMaterials'] }}</p>
       <p class="text-xs text-gray-500 mt-1">Jenis bahan</p>
     </div>
 
@@ -48,7 +38,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M9 3v18m6-18v18M3 9h18M3 15h18" />
         </svg>
       </div>
-      <p class="text-2xl font-semibold">4,890</p>
+      <p class="text-2xl font-semibold">{{ number_format($stats['totalInventory']) }}</p>
       <p class="text-xs text-gray-500 mt-1">Total unit</p>
     </div>
 
@@ -59,7 +49,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.333-1-4-1-4 2s2.667 3 4 4 4 1 4-2m0 0v1m0-1V7m-4 5v1m0-1V7" />
         </svg>
       </div>
-      <p class="text-xl font-semibold">IDR 3.2M</p>
+      <p class="text-xl font-semibold">IDR {{ number_format($stats['totalValue']) }}</p>
       <p class="text-xs text-gray-500 mt-1">Total nilai</p>
     </div>
 
@@ -70,10 +60,20 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01" />
         </svg>
       </div>
-      <p class="text-2xl font-semibold">2</p>
+      <p class="text-2xl font-semibold">{{ $stats['lowStock'] }}</p>
       <p class="text-xs text-gray-500 mt-1">Perlu di-restock</p>
     </div>
   </div>
+
+  {{-- Alert Low Stock --}}
+  @if($stats['lowStock'] > 0)
+  <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.662 1.732-3L13.732 4c-.77-1.338-2.694-1.338-3.464 0L3.34 16c-.77 1.338.192 3 1.732 3z"/>
+    </svg>
+    <p><strong>Peringatan:</strong> Ada {{ $stats['lowStock'] }} bahan dengan stok rendah yang perlu di-restock.</p>
+  </div>
+  @endif
 
   {{-- Filter & Pencarian --}}
   <div class="flex flex-col md:flex-row gap-4">
@@ -81,10 +81,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
       </svg>
-      <input type="text" class="w-full border rounded-lg pl-10 p-2" placeholder="Cari bahan...">
-    </div>
-    <div class="flex gap-2 overflow-x-auto">
-      <button class="border rounded-lg px-3 py-1.5 text-sm bg-blue-600 text-white">Semua Kategori</button>
+      <input type="text" class="w-full border rounded-lg pl-10 p-2 focus:ring-2 focus:ring-blue-500" placeholder="Cari bahan...">
     </div>
   </div>
 
@@ -93,47 +90,50 @@
     <table class="min-w-full text-sm">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Kode</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Nama Bahan</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Kategori</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Stok</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Satuan</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Harga Satuan</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Supplier</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-600">Jenis Bahan</th>
+          <th class="px-4 py-2 text-right font-medium text-gray-600">Stok</th>
+          <th class="px-4 py-2 text-right font-medium text-gray-600">Min. Stok</th>
+          <th class="px-4 py-2 text-right font-medium text-gray-600">Harga Satuan</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Status</th>
           <th class="px-4 py-2 text-right font-medium text-gray-600">Aksi</th>
         </tr>
       </thead>
       <tbody>
-        <tr class="border-t">
-          <td class="px-4 py-2">MAT-001</td>
-          <td class="px-4 py-2">Kulit Sapi Premium</td>
-          <td class="px-4 py-2">Kulit</td>
-          <td class="px-4 py-2">15</td>
-          <td class="px-4 py-2">lembar</td>
-          <td class="px-4 py-2">500.000</td>
-          <td class="px-4 py-2">LeatherCraft ID</td>
-          <td class="px-4 py-2"><span class="text-green-700 bg-green-100 px-2 py-1 rounded text-xs">Tersedia</span></td>
+        @forelse($materials as $material)
+        <tr class="border-t hover:bg-gray-50">
+          <td class="px-4 py-2 font-medium">{{ $material->NamaBahan }}</td>
+          <td class="px-4 py-2">{{ $material->Kategori ?? '-' }}</td>
+          <td class="px-4 py-2">{{ $material->JenisBahan ?? '-' }}</td>
+          <td class="px-4 py-2 text-right">{{ number_format($material->StokBahan) }}</td>
+          <td class="px-4 py-2 text-right">{{ number_format($material->MinimumStok) }}</td>
+          <td class="px-4 py-2 text-right">IDR {{ number_format($material->HargaSatuan ?? 0) }}</td>
+          <td class="px-4 py-2">
+            @if($material->StokBahan <= $material->MinimumStok)
+              <span class="text-red-700 bg-red-100 px-2 py-1 rounded text-xs">Stok Rendah</span>
+            @else
+              <span class="text-green-700 bg-green-100 px-2 py-1 rounded text-xs">Tersedia</span>
+            @endif
+          </td>
           <td class="px-4 py-2 text-right">
-            <button class="text-gray-500 hover:text-blue-600 px-2">✏️</button>
-            <button class="text-gray-500 hover:text-red-600 px-2">🗑️</button>
+            <div class="flex justify-end gap-2">
+              <button class="text-blue-600 hover:text-blue-800 px-2">✏️</button>
+              <form action="{{ route('inventorymaterial.destroy', $material->MaterialID) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="text-red-600 hover:text-red-800 px-2">🗑️</button>
+              </form>
+            </div>
           </td>
         </tr>
-
-        <tr class="border-t">
-          <td class="px-4 py-2">MAT-002</td>
-          <td class="px-4 py-2">Benang Nilon</td>
-          <td class="px-4 py-2">Benang</td>
-          <td class="px-4 py-2">4</td>
-          <td class="px-4 py-2">gulung</td>
-          <td class="px-4 py-2">30.000</td>
-          <td class="px-4 py-2">SewPro</td>
-          <td class="px-4 py-2"><span class="text-red-700 bg-red-100 px-2 py-1 rounded text-xs">Stok Rendah</span></td>
-          <td class="px-4 py-2 text-right">
-            <button class="text-gray-500 hover:text-blue-600 px-2">✏️</button>
-            <button class="text-gray-500 hover:text-red-600 px-2">🗑️</button>
+        @empty
+        <tr>
+          <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+            Belum ada data material. Klik tombol "Tambah Bahan" untuk menambahkan.
           </td>
         </tr>
+        @endforelse
       </tbody>
     </table>
   </div>

@@ -1,7 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6 p-6">
+<div x-data="{ 
+  tab: 'production', 
+  showProductionDialog: false, 
+  showCustomDialog: false 
+}" class="space-y-6 p-6">
+
   {{-- Header --}}
   <div class="flex items-center justify-between">
     <div>
@@ -13,7 +18,7 @@
   {{-- Stats Cards --}}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
     @php
-      $stats = [
+      $statsData = [
         ['label' => 'Total Pesanan', 'value' => 0, 'color' => 'text-gray-600', 'icon' => '📦'],
         ['label' => 'Pesanan Produksi', 'value' => 0, 'color' => 'text-blue-600', 'icon' => '⚙️'],
         ['label' => 'Pesanan Custom', 'value' => 0, 'color' => 'text-purple-600', 'icon' => '👟'],
@@ -22,7 +27,7 @@
       ];
     @endphp
 
-    @foreach ($stats as $stat)
+    @foreach ($statsData as $stat)
       <div class="border rounded-xl p-4 shadow-sm bg-white">
         <div class="flex justify-between items-center mb-2">
           <p class="text-sm font-medium">{{ $stat['label'] }}</p>
@@ -35,19 +40,19 @@
   </div>
 
   {{-- Tabs --}}
-  <div x-data="{ tab: 'production' }" class="space-y-4">
+  <div class="space-y-4">
     <div class="flex border-b">
       <button 
         @click="tab = 'production'" 
         :class="tab === 'production' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'" 
         class="px-4 py-2 font-medium transition">
-        <span class="inline-flex items-center"><span class="mr-2">📦</span> Pesanan Produksi</span>
+        <span class="inline-flex items-center gap-2">📦 Pesanan Produksi</span>
       </button>
       <button 
         @click="tab = 'custom'" 
         :class="tab === 'custom' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-600'" 
         class="px-4 py-2 font-medium transition">
-        <span class="inline-flex items-center"><span class="mr-2">👟</span> Pesanan Custom</span>
+        <span class="inline-flex items-center gap-2">👟 Pesanan Custom</span>
       </button>
     </div>
 
@@ -61,5 +66,9 @@
       @include('partials.custom-orders')
     </div>
   </div>
+
+  {{-- Include Dialogs --}}
+  @include('partials.productionorderdialog')
+  @include('partials.customorderdialog')
 </div>
 @endsection

@@ -7,7 +7,10 @@ use App\Models\Material;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\OrderDetail;
+use App\Models\CustomDetail;
 use App\Models\Transaction;
+use App\Models\Produksi;
 
 class DatabaseSeeder extends Seeder
 {
@@ -33,14 +36,14 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed Customers
-        Customer::create([
+        $customer1 = Customer::create([
             'Nama' => 'Budi Santoso',
             'Email' => 'budi@example.com',
             'NoTelp' => '081234567890',
             'Alamat' => 'Jl. Merdeka No. 123, Jakarta'
         ]);
 
-        Customer::create([
+        $customer2 = Customer::create([
             'Nama' => 'Agus Wijaya',
             'Email' => 'agus@example.com',
             'NoTelp' => '081234567891',
@@ -48,7 +51,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed Products
-        Product::create([
+        $product1 = Product::create([
             'NamaProduk' => 'Sepatu Kasual Pria',
             'JenisProduk' => 'Kasual',
             'Model' => 'Classic Oxford',
@@ -56,7 +59,7 @@ class DatabaseSeeder extends Seeder
             'Harga' => 750000
         ]);
 
-        Product::create([
+        $product2 = Product::create([
             'NamaProduk' => 'Sepatu Kulit Custom',
             'JenisProduk' => 'Custom',
             'Model' => 'Derby',
@@ -64,28 +67,57 @@ class DatabaseSeeder extends Seeder
             'Harga' => 1200000
         ]);
 
-        // Seed Orders
+        // Seed Production Order
         $order1 = Order::create([
-            'CustomerID' => 1,
+            'CustomerID' => $customer1->CustomerID,
             'Tanggal' => now(),
             'StatusOrder' => 'Proses',
-            'TotalHarga' => 15000000
+            'TotalHarga' => 1500000
         ]);
 
+        // Seed Order Details (Production Order)
+        OrderDetail::create([
+            'OrderID' => $order1->OrderID,
+            'ProductID' => $product1->ProductID,
+            'Jumlah' => 2,
+            'HargaSatuan' => 750000,
+            'Subtotal' => 1500000
+        ]);
+
+        // Seed Production
+        Produksi::create([
+            'OrderID' => $order1->OrderID,
+            'TanggalMulai' => now(),
+            'TanggalSelesai' => null,
+            'StatusProduksi' => 'Dalam Proses',
+            'Keterangan' => 'Produksi sepatu kasual untuk Budi Santoso'
+        ]);
+
+        // Seed Custom Order
         $order2 = Order::create([
-            'CustomerID' => 2,
+            'CustomerID' => $customer2->CustomerID,
             'Tanggal' => now()->subDays(5),
             'StatusOrder' => 'Tertunda',
             'TotalHarga' => 1200000
+        ]);
+
+        // Seed Custom Details
+        CustomDetail::create([
+            'OrderID' => $order2->OrderID,
+            'JenisBahan' => 'Full Grain Leather',
+            'Warna' => 'Hitam',
+            'Ukuran' => 42,
+            'Model' => 'Derby',
+            'CatatanTambahan' => 'Tambahkan inisial "AW" di bagian dalam'
         ]);
 
         // Seed Transactions
         Transaction::create([
             'OrderID' => $order1->OrderID,
             'JenisTransaksi' => 'Pemasukan',
-            'Jumlah' => 1200000,
+            'Jumlah' => 1500000,
             'Tanggal' => now(),
-            'Keterangan' => 'Penjualan sepatu kulit'
+            'Keterangan' => 'Penjualan sepatu kasual'
         ]);
 
         Transaction::create([
@@ -95,5 +127,21 @@ class DatabaseSeeder extends Seeder
             'Tanggal' => now()->subDays(1),
             'Keterangan' => 'Pembelian kulit sapi premium'
         ]);
+
+        // Add more customers for testing
+        Customer::create([
+            'Nama' => 'Siti Rahma',
+            'Email' => 'siti@example.com',
+            'NoTelp' => '081234567892',
+            'Alamat' => 'Jl. Ahmad Yani No. 789, Surabaya'
+        ]);
+
+        Customer::create([
+            'Nama' => 'Dedi Kurniawan',
+            'Email' => 'dedi@example.com',
+            'NoTelp' => '081234567893',
+            'Alamat' => 'Jl. Gatot Subroto No. 101, Semarang'
+        ]);
     }
+
 }
