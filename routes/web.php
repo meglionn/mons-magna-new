@@ -25,6 +25,7 @@ Route::put('/inventory/{material}', [MaterialController::class, 'update'])->name
 Route::delete('/inventory/{material}', [MaterialController::class, 'destroy'])->name('inventorymaterial.destroy');
 
 Route::get('/keuangan', [FinancialController::class, 'index'])->name('financial');
+Route::get('/keuangan/export', [FinancialController::class, 'export'])->name('financial.export');
 Route::post('/keuangan/income', [FinancialController::class, 'storeIncome'])->name('financial.income.store');
 Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->name('financial.expense.store');
 Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy');

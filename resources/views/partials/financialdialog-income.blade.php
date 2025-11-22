@@ -15,58 +15,60 @@
     </div>
 
     {{-- Form --}}
-    <form class="space-y-4">
+    <form action="{{ route('financial.income.store') }}" method="POST" class="space-y-4" onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').textContent='Menyimpan...'">
+      @csrf
+      
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-1">
-          <label class="text-sm font-medium">Tanggal</label>
-          <input type="date" class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
+          <label class="text-sm font-medium">Tanggal *</label>
+          <input type="date" name="Tanggal" required value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
 
         <div class="space-y-1">
           <label class="text-sm font-medium">Kategori</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Product Sales</option>
-            <option>Wholesale Orders</option>
-            <option>Custom Orders</option>
-            <option>Other Income</option>
+          <select name="Kategori" class="w-full border rounded-lg p-2">
+            <option value="Product Sales" selected>Product Sales</option>
+            <option value="Wholesale Orders">Wholesale Orders</option>
+            <option value="Custom Orders">Custom Orders</option>
+            <option value="Other Income">Other Income</option>
           </select>
         </div>
       </div>
 
       <div class="space-y-1">
         <label class="text-sm font-medium">Deskripsi</label>
-        <textarea rows="2" class="w-full border rounded-lg p-2" placeholder="Masukkan detail pendapatan..."></textarea>
+        <textarea name="Keterangan" rows="2" class="w-full border rounded-lg p-2" placeholder="Masukkan detail pendapatan..."></textarea>
       </div>
 
       <div class="space-y-1">
-        <label class="text-sm font-medium">Jumlah (IDR)</label>
-        <input type="number" class="w-full border rounded-lg p-2" placeholder="0">
+        <label class="text-sm font-medium">Jumlah (IDR) *</label>
+        <input type="number" name="Jumlah" required min="0" step="0.01" class="w-full border rounded-lg p-2" placeholder="0">
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-1">
           <label class="text-sm font-medium">Metode Pembayaran</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Cash</option>
-            <option>Bank Transfer</option>
-            <option>Credit Card</option>
-            <option>Debit Card</option>
-            <option>E-Wallet</option>
+          <select name="MetodePembayaran" class="w-full border rounded-lg p-2">
+            <option value="Cash" selected>Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="E-Wallet">E-Wallet</option>
           </select>
         </div>
 
         <div class="space-y-1">
-          <label class="text-sm font-medium">No. Referensi</label>
-          <input type="text" class="w-full border rounded-lg p-2" placeholder="e.g., INV-2025-001">
+          <label class="text-sm font-medium">No. Referensi / Order ID</label>
+          <input type="text" name="OrderID" class="w-full border rounded-lg p-2" placeholder="e.g., INV-2025-001 atau Order ID">
         </div>
       </div>
 
       <div class="space-y-1">
         <label class="text-sm font-medium">Status</label>
-        <select class="w-full border rounded-lg p-2">
-          <option>Completed</option>
-          <option>Pending</option>
-          <option>Cancelled</option>
+        <select name="Status" class="w-full border rounded-lg p-2">
+          <option value="Completed" selected>Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Cancelled">Cancelled</option>
         </select>
       </div>
 

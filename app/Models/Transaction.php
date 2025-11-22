@@ -16,8 +16,11 @@ class Transaction extends Model
     protected $fillable = [
         'OrderID',
         'JenisTransaksi',
+        'Kategori',
         'Jumlah',
         'Tanggal',
+        'MetodePembayaran',
+        'Status',
         'Keterangan',
     ];
 

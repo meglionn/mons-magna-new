@@ -15,63 +15,65 @@
     </div>
 
     {{-- Form --}}
-    <form class="space-y-4">
+    <form action="{{ route('financial.expense.store') }}" method="POST" class="space-y-4" onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').textContent='Menyimpan...'">
+      @csrf
+      
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-1">
-          <label class="text-sm font-medium">Tanggal</label>
-          <input type="date" class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
+          <label class="text-sm font-medium">Tanggal *</label>
+          <input type="date" name="Tanggal" required value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
 
         <div class="space-y-1">
           <label class="text-sm font-medium">Kategori</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Raw Materials</option>
-            <option>Labor</option>
-            <option>Utilities</option>
-            <option>Rent</option>
-            <option>Marketing</option>
-            <option>Maintenance</option>
-            <option>Equipment</option>
-            <option>Transportation</option>
-            <option>Other Expenses</option>
+          <select name="Kategori" class="w-full border rounded-lg p-2">
+            <option value="Raw Materials" selected>Raw Materials</option>
+            <option value="Labor">Labor</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Rent">Rent</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Transportation">Transportation</option>
+            <option value="Other Expenses">Other Expenses</option>
           </select>
         </div>
       </div>
 
       <div class="space-y-1">
         <label class="text-sm font-medium">Deskripsi</label>
-        <textarea rows="2" class="w-full border rounded-lg p-2" placeholder="Masukkan detail pengeluaran..."></textarea>
+        <textarea name="Keterangan" rows="2" class="w-full border rounded-lg p-2" placeholder="Masukkan detail pengeluaran..."></textarea>
       </div>
 
       <div class="space-y-1">
-        <label class="text-sm font-medium">Jumlah (IDR)</label>
-        <input type="number" class="w-full border rounded-lg p-2" placeholder="0">
+        <label class="text-sm font-medium">Jumlah (IDR) *</label>
+        <input type="number" name="Jumlah" required min="0" step="0.01" class="w-full border rounded-lg p-2" placeholder="0">
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-1">
           <label class="text-sm font-medium">Metode Pembayaran</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Cash</option>
-            <option>Bank Transfer</option>
-            <option>Credit Card</option>
-            <option>Debit Card</option>
-            <option>E-Wallet</option>
+          <select name="MetodePembayaran" class="w-full border rounded-lg p-2">
+            <option value="Cash" selected>Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="E-Wallet">E-Wallet</option>
           </select>
         </div>
 
         <div class="space-y-1">
-          <label class="text-sm font-medium">No. Referensi</label>
-          <input type="text" class="w-full border rounded-lg p-2" placeholder="e.g., EXP-2025-001">
+          <label class="text-sm font-medium">No. Referensi / Order ID</label>
+          <input type="text" name="OrderID" class="w-full border rounded-lg p-2" placeholder="e.g., EXP-2025-001 atau Order ID">
         </div>
       </div>
 
       <div class="space-y-1">
         <label class="text-sm font-medium">Status</label>
-        <select class="w-full border rounded-lg p-2">
-          <option>Completed</option>
-          <option>Pending</option>
-          <option>Cancelled</option>
+        <select name="Status" class="w-full border rounded-lg p-2">
+          <option value="Completed" selected>Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Cancelled">Cancelled</option>
         </select>
       </div>
 
