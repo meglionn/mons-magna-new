@@ -31,3 +31,5 @@ Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->
 Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy');
 
 Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan');
+Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf');
+Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
