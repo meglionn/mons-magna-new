@@ -22,15 +22,47 @@ class FinancialController extends Controller
             'profitMargin' => $income > 0 ? ($netProfit / $income) * 100 : 0,
         ];
         
-        return view('financial', compact('transactions', 'stats'));
+        // Income Analysis
+        $incomeByCategory = Transaction::where('JenisTransaksi', 'Pemasukan')
+            ->selectRaw('Kategori, SUM(Jumlah) as total, COUNT(*) as count')
+            ->groupBy('Kategori')
+            ->get();
+            
+        $incomeByPayment = Transaction::where('JenisTransaksi', 'Pemasukan')
+            ->selectRaw('MetodePembayaran, SUM(Jumlah) as total')
+            ->groupBy('MetodePembayaran')
+            ->get();
+        
+        // Expense Analysis
+        $expensesByCategory = Transaction::where('JenisTransaksi', 'Pengeluaran')
+            ->selectRaw('Kategori, SUM(Jumlah) as total, COUNT(*) as count')
+            ->groupBy('Kategori')
+            ->get();
+            
+        $expensesByPayment = Transaction::where('JenisTransaksi', 'Pengeluaran')
+            ->selectRaw('MetodePembayaran, SUM(Jumlah) as total')
+            ->groupBy('MetodePembayaran')
+            ->get();
+        
+        return view('financial', compact(
+            'transactions', 
+            'stats', 
+            'incomeByCategory', 
+            'incomeByPayment',
+            'expensesByCategory',
+            'expensesByPayment'
+        ));
     }
 
     public function storeIncome(Request $request)
     {
         $validated = $request->validate([
-            'OrderID' => 'nullable|exists:orders,OrderID',
+            'OrderID' => 'nullable|string|max:255',
+            'Kategori' => 'nullable|string|max:255',
             'Jumlah' => 'required|numeric|min:0',
             'Tanggal' => 'required|date',
+            'MetodePembayaran' => 'nullable|string|max:255',
+            'Status' => 'nullable|string|max:255',
             'Keterangan' => 'nullable|string',
         ]);
 
@@ -38,16 +70,19 @@ class FinancialController extends Controller
 
         Transaction::create($validated);
 
-        return redirect()->route('financial.index')
+        return redirect()->route('financial')
             ->with('success', 'Pendapatan berhasil ditambahkan');
     }
 
     public function storeExpense(Request $request)
     {
         $validated = $request->validate([
-            'OrderID' => 'nullable|exists:orders,OrderID',
+            'OrderID' => 'nullable|string|max:255',
+            'Kategori' => 'nullable|string|max:255',
             'Jumlah' => 'required|numeric|min:0',
             'Tanggal' => 'required|date',
+            'MetodePembayaran' => 'nullable|string|max:255',
+            'Status' => 'nullable|string|max:255',
             'Keterangan' => 'nullable|string',
         ]);
 
@@ -55,7 +90,7 @@ class FinancialController extends Controller
 
         Transaction::create($validated);
 
-        return redirect()->route('financial.index')
+        return redirect()->route('financial')
             ->with('success', 'Pengeluaran berhasil ditambahkan');
     }
 
@@ -63,7 +98,44 @@ class FinancialController extends Controller
     {
         $transaction->delete();
 
-        return redirect()->route('financial.index')
+        return redirect()->route('financial')
             ->with('success', 'Transaksi berhasil dihapus');
+    }
+
+    public function export()
+    {
+        $transactions = Transaction::orderBy('Tanggal', 'desc')->get();
+        
+        $filename = 'laporan_keuangan_' . date('Y-m-d') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+        
+        $callback = function() use ($transactions) {
+            $file = fopen('php://output', 'w');
+            
+            // Header CSV
+            fputcsv($file, ['Tanggal', 'Tipe', 'Kategori', 'Deskripsi', 'Jumlah (IDR)', 'Metode Pembayaran', 'Referensi', 'Status']);
+            
+            // Data rows
+            foreach ($transactions as $transaction) {
+                fputcsv($file, [
+                    $transaction->Tanggal->format('d/m/Y'),
+                    $transaction->JenisTransaksi,
+                    $transaction->Kategori ?: '-',
+                    $transaction->Keterangan ?: '-',
+                    $transaction->Jumlah,
+                    $transaction->MetodePembayaran ?: '-',
+                    $transaction->OrderID ?: '-',
+                    $transaction->Status ?: '-',
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
     }
 }

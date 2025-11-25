@@ -10,10 +10,13 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id('TransaksiID');
-            $table->foreignId('OrderID')->nullable()->constrained('orders', 'OrderID');
+            $table->string('OrderID')->nullable();
             $table->enum('JenisTransaksi', ['Pemasukan', 'Pengeluaran']);
+            $table->string('Kategori')->nullable();
             $table->decimal('Jumlah', 12, 2);
             $table->date('Tanggal');
+            $table->string('MetodePembayaran')->nullable();
+            $table->string('Status')->default('Completed');
             $table->text('Keterangan')->nullable();
         });
     }
