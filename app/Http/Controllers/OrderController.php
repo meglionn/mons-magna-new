@@ -13,22 +13,22 @@ use Illuminate\Http\Request;
 class OrderController extends Controller
 {
     public function index()
-    {
-        $orders = Order::with('customer')->orderBy('Tanggal', 'desc')->get();
-        
-        $stats = [
-            'totalOrders' => Order::count(),
-            'productionOrders' => Order::where('StatusOrder', 'Produksi')->count(),
-            'customOrders' => Order::whereHas('customDetail')->count(),
-            'activeOrders' => Order::whereIn('StatusOrder', ['Proses', 'Produksi'])->count(),
-            'completed' => Order::where('StatusOrder', 'Selesai')->count(),
-        ];
-        
-        $customers = Customer::all();
-        $products = Product::all();
-        
-        return view('order', compact('orders', 'stats', 'customers', 'products'));
-    }
+{
+    $orders = Order::with('customer')->orderBy('Tanggal', 'desc')->get();
+    
+    $stats = [
+        'totalOrders' => Order::count(),
+        'productionOrders' => Order::where('StatusOrder', 'Produksi')->count(),
+        'customOrders' => Order::whereHas('customDetail')->count(),
+        'activeOrders' => Order::whereIn('StatusOrder', ['Proses', 'Produksi'])->count(),
+        'completed' => Order::where('StatusOrder', 'Selesai')->count(),
+    ];
+    
+    $customers = Customer::all();
+    $products = Product::all();
+    
+    return view('order', compact('orders', 'stats', 'customers', 'products'));
+}
 
     public function store(Request $request)
     {
@@ -97,63 +97,64 @@ class OrderController extends Controller
     }
 
     public function storeCustom(Request $request)
-    {
-        $validated = $request->validate([
-            'CustomerID' => 'required|exists:customers,CustomerID',
-            'Tanggal' => 'required|date',
-            'TenggalSelesai' => 'required|date',
-            'TotalHarga' => 'required|numeric|min:0',
-            'DepositPaid' => 'nullable|numeric|min:0',
-            'StatusOrder' => 'required|string',
-            'Prioritas' => 'required|string',
-            // Custom details
-            'ProductType' => 'required|string',
-            'Size' => 'required|string',
-            'Color' => 'required|string',
-            'Material' => 'required|string',
-            'Style' => 'nullable|string',
-            'CustomFeatures' => 'nullable|string',
-            'FootLength' => 'nullable|string',
-            'FootWidth' => 'nullable|string',
-            'InstepHeight' => 'nullable|string',
-            'SpecialRequirements' => 'nullable|string',
-            'AdditionalNotes' => 'nullable|string',
-        ]);
+{
+    $validated = $request->validate([
+        'CustomerID' => 'required|exists:customers,CustomerID',
+        'Tanggal' => 'required|date',
+        'TenggalSelesai' => 'required|date',
+        'TotalHarga' => 'required|numeric|min:0',
+        'DepositPaid' => 'nullable|numeric|min:0',
+        'StatusOrder' => 'required|string',
+        'Prioritas' => 'required|string',
+        // Custom details
+        'ProductType' => 'required|string',
+        'Size' => 'required|string',
+        'Color' => 'required|string',
+        'Material' => 'required|string',
+        'Style' => 'nullable|string',
+        'CustomFeatures' => 'nullable|string',
+        'FootLength' => 'nullable|string',
+        'FootWidth' => 'nullable|string',
+        'InstepHeight' => 'nullable|string',
+        'SpecialRequirements' => 'nullable|string',
+        'AdditionalNotes' => 'nullable|string',
+    ]);
 
-        // Create Order
-        $order = Order::create([
-            'CustomerID' => $validated['CustomerID'],
-            'Tanggal' => $validated['Tanggal'],
-            'StatusOrder' => $validated['StatusOrder'],
-            'TotalHarga' => $validated['TotalHarga'],
-        ]);
+    // Create Order
+    $order = Order::create([
+        'CustomerID' => $validated['CustomerID'],
+        'Tanggal' => $validated['Tanggal'],
+        'StatusOrder' => $validated['StatusOrder'],
+        'TotalHarga' => $validated['TotalHarga'],
+    ]);
 
-        // Create Custom Detail
-        $customNotes = [
-            'ProductType' => $validated['ProductType'],
-            'Size' => $validated['Size'],
-            'Color' => $validated['Color'],
-            'Material' => $validated['Material'],
-            'Style' => $validated['Style'] ?? '',
-            'CustomFeatures' => $validated['CustomFeatures'] ?? '',
-            'FootLength' => $validated['FootLength'] ?? '',
-            'FootWidth' => $validated['FootWidth'] ?? '',
-            'InstepHeight' => $validated['InstepHeight'] ?? '',
-            'SpecialRequirements' => $validated['SpecialRequirements'] ?? '',
-            'AdditionalNotes' => $validated['AdditionalNotes'] ?? '',
-        ];
+    // Create Custom Detail
+    $customNotes = [
+        'ProductType' => $validated['ProductType'],
+        'Size' => $validated['Size'],
+        'Color' => $validated['Color'],
+        'Material' => $validated['Material'],
+        'Style' => $validated['Style'] ?? '',
+        'CustomFeatures' => $validated['CustomFeatures'] ?? '',
+        'FootLength' => $validated['FootLength'] ?? '',
+        'FootWidth' => $validated['FootWidth'] ?? '',
+        'InstepHeight' => $validated['InstepHeight'] ?? '',
+        'SpecialRequirements' => $validated['SpecialRequirements'] ?? '',
+        'AdditionalNotes' => $validated['AdditionalNotes'] ?? '',
+    ];
 
-        CustomDetail::create([
-            'OrderID' => $order->OrderID,
-            'JenisBahan' => $validated['Material'],
-            'Warna' => $validated['Color'],
-            'Ukuran' => $validated['Size'],
-            'Model' => $validated['ProductType'],
-            'CatatanTambahan' => json_encode($customNotes),
-        ]);
+    CustomDetail::create([
+        'OrderID' => $order->OrderID,
+        'JenisBahan' => $validated['Material'],
+        'Warna' => $validated['Color'],
+        'Ukuran' => $validated['Size'],
+        'Model' => $validated['ProductType'],
+        'CatatanTambahan' => json_encode($customNotes),
+    ]);
 
-        return redirect()->route('order.index')
-            ->with('success', 'Pesanan custom berhasil ditambahkan');
+    // PERBAIKAN: Ganti order.index dengan order (nama route yang benar)
+    return redirect()->route('order')
+        ->with('success', 'Pesanan custom berhasil ditambahkan');
     }
 
     public function update(Request $request, Order $order)

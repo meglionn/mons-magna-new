@@ -6,12 +6,17 @@
       <p class="text-gray-600">Kelola pesanan sepatu custom dengan spesifikasi khusus</p>
     </div>
 
-    {{-- Tombol dialog - FIXED: menggunakan parent scope --}}
-    <button 
-      @click="$parent.showCustomDialog = true"
-      class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-      + Pesanan Custom Baru
-    </button>
+    {{-- PERBAIKAN: Pindahkan x-data ke sini --}}
+    <div x-data="{ showDialog: false }">
+      <button 
+        @click="showDialog = true"
+        class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+        + Pesanan Custom Baru
+      </button>
+      
+      {{-- Include dialog di dalam scope yang sama --}}
+      @include('partials.customorderdialog')
+    </div>
   </div>
 
   {{-- Filter --}}
@@ -28,12 +33,12 @@
     </div>
     <div class="flex gap-2 overflow-x-auto">
       @foreach (['Semua','Tertunda','Dikonfirmasi','Dalam Produksi','Siap','Terkirim'] as $filter)
-        <button class="px-3 py-1 border rounded-lg text-sm hover:bg-gray-100 whitespace-nowrap">{{ $filter }}</button>
+        <button class="px-3 py-1 border rounded-lg text-sm hover:bg-gray-100">{{ $filter }}</button>
       @endforeach
     </div>
   </div>
 
-  {{-- Tabel Pesanan Custom --}}
+  {{-- Tabel --}}
   <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-50">
@@ -52,21 +57,8 @@
       </thead>
       <tbody class="divide-y divide-gray-200">
         <tr>
-          <td class="px-4 py-2">#CST-001</td>
-          <td class="px-4 py-2">
-            <p class="font-medium">Agus Wijaya</p>
-          </td>
-          <td class="px-4 py-2">Sepatu Kulit</td>
-          <td class="px-4 py-2 text-sm">42 / Hitam / Leather</td>
-          <td class="px-4 py-2 text-right">IDR 1.200.000</td>
-          <td class="px-4 py-2 text-right text-yellow-600">IDR 600.000</td>
-          <td class="px-4 py-2">25/11/2025</td>
-          <td class="px-4 py-2"><span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg">Mendesak</span></td>
-          <td class="px-4 py-2"><span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-lg">Tertunda</span></td>
-          <td class="px-4 py-2 text-right">
-            <div class="flex justify-end gap-2">
-              <button class="text-gray-600 hover:text-gray-800">✏️</button>
-            </div>
+          <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+            Belum ada data pesanan custom
           </td>
         </tr>
       </tbody>
