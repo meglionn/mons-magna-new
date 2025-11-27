@@ -33,7 +33,7 @@ class MaterialController extends Controller
 
         Material::create($validated);
 
-        return redirect()->route('inventorymaterial.index')
+        return redirect()->route('inventorymaterial')
             ->with('success', 'Material berhasil ditambahkan');
     }
 
@@ -50,7 +50,7 @@ class MaterialController extends Controller
 
         $material->update($validated);
 
-        return redirect()->route('inventorymaterial.index')
+        return redirect()->route('inventorymaterial')
             ->with('success', 'Material berhasil diupdate');
     }
 
@@ -58,7 +58,7 @@ class MaterialController extends Controller
     {
         $material->delete();
 
-        return redirect()->route('inventorymaterial.index')
+        return redirect()->route('inventorymaterial')
             ->with('success', 'Material berhasil dihapus');
     }
 }
