@@ -15,7 +15,7 @@
     </button>
     
     {{-- Modal Tambah Bahan --}}
-    @include('partials.inventorydialog')
+    @include('inventorydialog')
   </div>
 
   {{-- Statistik --}}
