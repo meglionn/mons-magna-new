@@ -27,20 +27,8 @@ x-show="showDialog"
       
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Customer *</label>
-          <select name="CustomerID" class="w-full border rounded-lg p-2">
-            <option value="">Pilih Customer (atau isi nama baru di bawah)</option>
-            @if(isset($customers))
-              @foreach($customers as $customer)
-                <option value="{{ $customer->CustomerID }}">{{ $customer->Nama }}</option>
-              @endforeach
-            @endif
-          </select>
-
-          <div class="mt-2">
-            <label class="block text-xs text-gray-600 mb-1">Atau masukkan nama pelanggan baru</label>
-            <input type="text" name="CustomerName" placeholder="Nama pelanggan baru" class="w-full border rounded-lg p-2" />
-          </div>
+          <label class="block text-sm font-medium mb-1">Nama Pelanggan *</label>
+          <input type="text" name="CustomerName" required placeholder="Nama pelanggan" class="w-full border rounded-lg p-2" />
         </div>
 
         <div class="grid grid-cols-2 gap-4">

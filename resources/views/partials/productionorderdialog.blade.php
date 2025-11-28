@@ -27,26 +27,11 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Nama Pelanggan *</label>
-          <select name="CustomerID" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-            <option value="">Pilih pelanggan (atau isi nama baru di bawah)</option>
-            @foreach($customers as $customer)
-              <option value="{{ $customer->CustomerID }}">{{ $customer->Nama }}</option>
-            @endforeach
-          </select>
-
-          <div class="mt-2">
-            <label class="block text-xs text-gray-600 mb-1">Atau masukkan nama pelanggan baru</label>
-            <input type="text" name="CustomerName" placeholder="Nama pelanggan baru" class="w-full border rounded-lg p-2" />
-          </div>
+          <input type="text" name="CustomerName" required placeholder="Nama pelanggan" class="w-full border rounded-lg p-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Produk *</label>
-          <select name="ProductID" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-            <option value="">Pilih produk</option>
-            @foreach($products as $product)
-              <option value="{{ $product->ProductID }}">{{ $product->NamaProduk }} - IDR {{ number_format($product->Harga) }}</option>
-            @endforeach
-          </select>
+          <label class="block text-sm font-medium mb-1">Nama Produk *</label>
+          <input type="text" name="ProductName" required placeholder="Nama produk" class="w-full border rounded-lg p-2" />
         </div>
       </div>
 

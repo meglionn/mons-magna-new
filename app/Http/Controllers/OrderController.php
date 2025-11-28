@@ -33,27 +33,21 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'CustomerID' => 'nullable|exists:customers,CustomerID',
-            'CustomerName' => 'required_without:CustomerID|string|max:255',
+            'CustomerName' => 'required|string|max:255',
             'Tanggal' => 'required|date',
             'StatusOrder' => 'required|string|max:50',
             'TotalHarga' => 'nullable|numeric|min:0',
         ]);
 
         // If CustomerID not provided, create a new customer using provided name (and optional contact fields)
-        $customerId = $validated['CustomerID'] ?? null;
-        if (!$customerId) {
-            $customer = Customer::create([
-                'Nama' => $validated['CustomerName'],
-                'Email' => $request->input('CustomerEmail'),
-                'NoTelp' => $request->input('CustomerPhone'),
-                'Alamat' => $request->input('CustomerAlamat'),
-            ]);
-            $customerId = $customer->CustomerID;
-        }
-
+        $customer = Customer::create([
+            'Nama' => $validated['CustomerName'],
+            'Email' => $request->input('CustomerEmail'),
+            'NoTelp' => $request->input('CustomerPhone'),
+            'Alamat' => $request->input('CustomerAlamat'),
+        ]);
         $order = Order::create([
-            'CustomerID' => $customerId,
+            'CustomerID' => $customer->CustomerID,
             'Tanggal' => $validated['Tanggal'],
             'StatusOrder' => $validated['StatusOrder'],
             'TotalHarga' => $validated['TotalHarga'] ?? 0,
@@ -66,9 +60,8 @@ class OrderController extends Controller
     public function storeProduction(Request $request)
     {
         $validated = $request->validate([
-            'CustomerID' => 'nullable|exists:customers,CustomerID',
-            'CustomerName' => 'required_without:CustomerID|string|max:255',
-            'ProductID' => 'required|exists:products,ProductID',
+            'CustomerName' => 'required|string|max:255',
+            'ProductName' => 'required|string|max:255',
             'Tanggal' => 'required|date',
             'TanggalMulai' => 'required|date',
             'TenggalSelesai' => 'nullable|date|after:TanggalMulai',
@@ -81,31 +74,30 @@ class OrderController extends Controller
 
         // Create Order
         // Ensure customer exists (create if needed)
-        $customerId = $validated['CustomerID'] ?? null;
-        if (!$customerId) {
-            $cust = Customer::create([
-                'Nama' => $validated['CustomerName'],
-                'Email' => $request->input('CustomerEmail'),
-                'NoTelp' => $request->input('CustomerPhone'),
-                'Alamat' => $request->input('CustomerAlamat'),
-            ]);
-            $customerId = $cust->CustomerID;
-        }
+        $customer = Customer::create([
+            'Nama' => $validated['CustomerName'],
+            'Email' => $request->input('CustomerEmail'),
+            'NoTelp' => $request->input('CustomerPhone'),
+            'Alamat' => $request->input('CustomerAlamat'),
+        ]);
+
+        // Cari produk, jika belum ada maka buat baru (harga default 0)
+        $product = Product::firstOrCreate(
+            ['NamaProduk' => $validated['ProductName']],
+            ['Harga' => 0]
+        );
 
         $order = Order::create([
-            'CustomerID' => $customerId,
+            'CustomerID' => $customer->CustomerID,
             'Tanggal' => $validated['Tanggal'],
             'StatusOrder' => $validated['StatusOrder'],
             'TotalHarga' => 0, // Will be calculated from order details
         ]);
 
-        // Get product for pricing
-        $product = Product::find($validated['ProductID']);
-        
         // Create Order Detail
         $orderDetail = OrderDetail::create([
             'OrderID' => $order->OrderID,
-            'ProductID' => $validated['ProductID'],
+            'ProductID' => $product->ProductID,
             'Jumlah' => $validated['Jumlah'],
             'HargaSatuan' => $product->Harga,
             'Subtotal' => $product->Harga * $validated['Jumlah'],
@@ -130,8 +122,7 @@ class OrderController extends Controller
     public function storeCustom(Request $request)
     {
         $validated = $request->validate([
-            'CustomerID' => 'nullable|exists:customers,CustomerID',
-            'CustomerName' => 'required_without:CustomerID|string|max:255',
+            'CustomerName' => 'required|string|max:255',
         'Tanggal' => 'required|date',
         'TenggalSelesai' => 'required|date',
         'TotalHarga' => 'required|numeric|min:0',
@@ -153,20 +144,15 @@ class OrderController extends Controller
     ]);
 
         // Ensure customer exists (create if needed)
-        $customerId = $validated['CustomerID'] ?? null;
-        if (!$customerId) {
-            $cust = Customer::create([
-                'Nama' => $validated['CustomerName'],
-                'Email' => $request->input('CustomerEmail'),
-                'NoTelp' => $request->input('CustomerPhone'),
-                'Alamat' => $request->input('CustomerAlamat'),
-            ]);
-            $customerId = $cust->CustomerID;
-        }
-
+        $customer = Customer::create([
+            'Nama' => $validated['CustomerName'],
+            'Email' => $request->input('CustomerEmail'),
+            'NoTelp' => $request->input('CustomerPhone'),
+            'Alamat' => $request->input('CustomerAlamat'),
+        ]);
         // Create Order
         $order = Order::create([
-            'CustomerID' => $customerId,
+            'CustomerID' => $customer->CustomerID,
             'Tanggal' => $validated['Tanggal'],
             'StatusOrder' => $validated['StatusOrder'],
             'TotalHarga' => $validated['TotalHarga'],
