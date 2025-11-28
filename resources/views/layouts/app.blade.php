@@ -46,11 +46,34 @@
 </head>
 <body class="antialiased bg-gray-50">
   @if (!request()->is('/') && !request()->is('login') && !request()->is('register'))
+    @php $user = auth()->user(); @endphp
     <div class="nav-tabs">
-        <a href="{{ route('order') }}" class="{{ request()->is('pesanan*') ? 'active disabled' : '' }}">Pesanan</a>
-        <a href="{{ route('inventorymaterial') }}" class="{{ request()->is('inventory*') ? 'active disabled' : '' }}">Inventori Bahan</a>
-        <a href="{{ route('financial') }}" class="{{ request()->is('keuangan*') ? 'active disabled' : '' }}">Keuangan</a>
-        <a href="{{ route('laporan') }}" class="{{ request()->is('laporan*') ? 'active disabled' : '' }}">Laporan</a>
+        @if($user && in_array($user->Role, ['Owner','Admin','Produksi']))
+            <a href="{{ route('order') }}" class="{{ request()->is('pesanan*') ? 'active disabled' : '' }}">Pesanan</a>
+        @endif
+
+        @if($user && in_array($user->Role, ['Admin','Produksi']))
+            <a href="{{ route('inventorymaterial') }}" class="{{ request()->is('inventory*') ? 'active disabled' : '' }}">Inventori Bahan</a>
+        @endif
+
+        @if($user && $user->Role === 'Keuangan')
+            <a href="{{ route('financial') }}" class="{{ request()->is('keuangan*') ? 'active disabled' : '' }}">Keuangan</a>
+        @endif
+
+        @if($user && in_array($user->Role, ['Owner','Admin','Produksi','Keuangan']))
+            <a href="{{ route('laporan') }}" class="{{ request()->is('laporan*') ? 'active disabled' : '' }}">Laporan</a>
+        @endif
+
+        {{-- Show user info and logout --}}
+        @if($user)
+          <div class="ml-4 flex items-center">
+            <span class="text-sm text-gray-700 mr-3">{{ $user->NamaLengkap ?? $user->Username }} ({{ $user->Role }})</span>
+            <form method="POST" action="{{ route('logout') }}">
+              @csrf
+              <button type="submit" class="text-sm text-red-600 hover:underline">Logout</button>
+            </form>
+          </div>
+        @endif
     </div>
   @endif
 

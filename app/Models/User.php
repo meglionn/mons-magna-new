@@ -17,10 +17,20 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    protected $table = 'users';
+    protected $primaryKey = 'UserID';
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = false;
+
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'Username',
+        'Password',
+        'NamaLengkap',
+        'Email',
+        'Role',
+        'EmailVerifiedAt',
+        'EmailVerificationToken',
     ];
 
     /**
@@ -29,8 +39,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'Password',
     ];
 
     /**
@@ -41,8 +50,29 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'TanggalDaftar' => 'datetime',
+            'EmailVerifiedAt' => 'datetime',
         ];
+    }
+
+    // Role helpers
+    public function isOwner(): bool
+    {
+        return $this->Role === 'Owner';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->Role === 'Admin';
+    }
+
+    public function isProduksi(): bool
+    {
+        return $this->Role === 'Produksi';
+    }
+
+    public function isKeuangan(): bool
+    {
+        return $this->Role === 'Keuangan';
     }
 }

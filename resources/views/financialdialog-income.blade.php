@@ -23,6 +23,16 @@
           <label class="text-sm font-medium">Tanggal *</label>
           <input type="date" name="Tanggal" required value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
+        
+      <div class="form-group">
+        <label for="Status">Status</label>
+        <select name="Status" id="Status" class="form-control">
+          <option value="">-- Select status --</option>
+          <option value="Completed">Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
 
         <div class="space-y-1">
           <label class="text-sm font-medium">Order ID (Opsional)</label>

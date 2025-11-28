@@ -33,22 +33,41 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'CustomerID' => 'required|exists:customers,CustomerID',
+            'CustomerID' => 'nullable|exists:customers,CustomerID',
+            'CustomerName' => 'required_without:CustomerID|string|max:255',
             'Tanggal' => 'required|date',
             'StatusOrder' => 'required|string|max:50',
             'TotalHarga' => 'nullable|numeric|min:0',
         ]);
 
-        $order = Order::create($validated);
+        // If CustomerID not provided, create a new customer using provided name (and optional contact fields)
+        $customerId = $validated['CustomerID'] ?? null;
+        if (!$customerId) {
+            $customer = Customer::create([
+                'Nama' => $validated['CustomerName'],
+                'Email' => $request->input('CustomerEmail'),
+                'NoTelp' => $request->input('CustomerPhone'),
+                'Alamat' => $request->input('CustomerAlamat'),
+            ]);
+            $customerId = $customer->CustomerID;
+        }
 
-        return redirect()->route('order.index')
+        $order = Order::create([
+            'CustomerID' => $customerId,
+            'Tanggal' => $validated['Tanggal'],
+            'StatusOrder' => $validated['StatusOrder'],
+            'TotalHarga' => $validated['TotalHarga'] ?? 0,
+        ]);
+
+        return redirect()->route('order')
             ->with('success', 'Pesanan berhasil ditambahkan');
     }
 
     public function storeProduction(Request $request)
     {
         $validated = $request->validate([
-            'CustomerID' => 'required|exists:customers,CustomerID',
+            'CustomerID' => 'nullable|exists:customers,CustomerID',
+            'CustomerName' => 'required_without:CustomerID|string|max:255',
             'ProductID' => 'required|exists:products,ProductID',
             'Tanggal' => 'required|date',
             'TanggalMulai' => 'required|date',
@@ -61,8 +80,20 @@ class OrderController extends Controller
         ]);
 
         // Create Order
+        // Ensure customer exists (create if needed)
+        $customerId = $validated['CustomerID'] ?? null;
+        if (!$customerId) {
+            $cust = Customer::create([
+                'Nama' => $validated['CustomerName'],
+                'Email' => $request->input('CustomerEmail'),
+                'NoTelp' => $request->input('CustomerPhone'),
+                'Alamat' => $request->input('CustomerAlamat'),
+            ]);
+            $customerId = $cust->CustomerID;
+        }
+
         $order = Order::create([
-            'CustomerID' => $validated['CustomerID'],
+            'CustomerID' => $customerId,
             'Tanggal' => $validated['Tanggal'],
             'StatusOrder' => $validated['StatusOrder'],
             'TotalHarga' => 0, // Will be calculated from order details
@@ -92,14 +123,15 @@ class OrderController extends Controller
             'Keterangan' => $validated['Keterangan'] ?? null,
         ]);
 
-        return redirect()->route('order.index')
+        return redirect()->route('order')
             ->with('success', 'Pesanan produksi berhasil ditambahkan');
     }
 
     public function storeCustom(Request $request)
-{
-    $validated = $request->validate([
-        'CustomerID' => 'required|exists:customers,CustomerID',
+    {
+        $validated = $request->validate([
+            'CustomerID' => 'nullable|exists:customers,CustomerID',
+            'CustomerName' => 'required_without:CustomerID|string|max:255',
         'Tanggal' => 'required|date',
         'TenggalSelesai' => 'required|date',
         'TotalHarga' => 'required|numeric|min:0',
@@ -120,13 +152,25 @@ class OrderController extends Controller
         'AdditionalNotes' => 'nullable|string',
     ]);
 
-    // Create Order
-    $order = Order::create([
-        'CustomerID' => $validated['CustomerID'],
-        'Tanggal' => $validated['Tanggal'],
-        'StatusOrder' => $validated['StatusOrder'],
-        'TotalHarga' => $validated['TotalHarga'],
-    ]);
+        // Ensure customer exists (create if needed)
+        $customerId = $validated['CustomerID'] ?? null;
+        if (!$customerId) {
+            $cust = Customer::create([
+                'Nama' => $validated['CustomerName'],
+                'Email' => $request->input('CustomerEmail'),
+                'NoTelp' => $request->input('CustomerPhone'),
+                'Alamat' => $request->input('CustomerAlamat'),
+            ]);
+            $customerId = $cust->CustomerID;
+        }
+
+        // Create Order
+        $order = Order::create([
+            'CustomerID' => $customerId,
+            'Tanggal' => $validated['Tanggal'],
+            'StatusOrder' => $validated['StatusOrder'],
+            'TotalHarga' => $validated['TotalHarga'],
+        ]);
 
     // Create Custom Detail
     $customNotes = [
@@ -152,9 +196,9 @@ class OrderController extends Controller
         'CatatanTambahan' => json_encode($customNotes),
     ]);
 
-    // PERBAIKAN: Ganti order.index dengan order (nama route yang benar)
-    return redirect()->route('order')
-        ->with('success', 'Pesanan custom berhasil ditambahkan');
+        // Return to listing (route name `order` exists)
+        return redirect()->route('order')
+            ->with('success', 'Pesanan custom berhasil ditambahkan');
     }
 
     public function update(Request $request, Order $order)
@@ -168,7 +212,7 @@ class OrderController extends Controller
 
         $order->update($validated);
 
-        return redirect()->route('order.index')
+        return redirect()->route('order')
             ->with('success', 'Pesanan berhasil diupdate');
     }
 
@@ -181,7 +225,7 @@ class OrderController extends Controller
         
         $order->delete();
 
-        return redirect()->route('order.index')
+        return redirect()->route('order')
             ->with('success', 'Pesanan berhasil dihapus');
     }
 }

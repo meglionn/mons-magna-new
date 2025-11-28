@@ -11,7 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // No changes here — route middleware aliases are registered in Kernel in a typical Laravel app.
+        // This project uses a custom bootstrap; to avoid calling non-existent methods, leave this blank.
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -5,31 +5,42 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\FinancialController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\LogoutController;
 
 // Public routes
 Route::view('/', 'welcome')->name('welcome');
 Route::view('/login', 'login')->name('login');
-Route::view('/register', 'register')->name('register');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::get('/register', [RegisterController::class, 'show'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
+Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 
-// Protected routes (add auth middleware later)
-Route::get('/pesanan', [OrderController::class, 'index'])->name('order');
-Route::post('/pesanan', [OrderController::class, 'store'])->name('order.store');
-Route::post('/pesanan/production', [OrderController::class, 'storeProduction'])->name('order.production.store');
-Route::post('/pesanan/custom', [OrderController::class, 'storeCustom'])->name('order.custom.store');
-Route::put('/pesanan/{order}', [OrderController::class, 'update'])->name('order.update');
-Route::delete('/pesanan/{order}', [OrderController::class, 'destroy'])->name('order.destroy');
+Route::get('/verify-email/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
+// Protected routes with role middleware
+// Orders: viewing allowed for Owner, Admin, Produksi. Creating/updating allowed for Owner, Admin only.
+Route::get('/pesanan', [OrderController::class, 'index'])->name('order')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
+Route::post('/pesanan', [OrderController::class, 'store'])->name('order.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
+Route::post('/pesanan/production', [OrderController::class, 'storeProduction'])->name('order.production.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
+Route::post('/pesanan/custom', [OrderController::class, 'storeCustom'])->name('order.custom.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
+Route::put('/pesanan/{order}', [OrderController::class, 'update'])->name('order.update')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
+Route::delete('/pesanan/{order}', [OrderController::class, 'destroy'])->name('order.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
 
-Route::get('/inventory', [MaterialController::class, 'index'])->name('inventorymaterial');
-Route::post('/inventory', [MaterialController::class, 'store'])->name('inventorymaterial.store');
-Route::put('/inventory/{material}', [MaterialController::class, 'update'])->name('inventorymaterial.update');
-Route::delete('/inventory/{material}', [MaterialController::class, 'destroy'])->name('inventorymaterial.destroy');
+// Inventory: Admin and Produksi can view; only Admin can modify
+Route::get('/inventory', [MaterialController::class, 'index'])->name('inventorymaterial')->middleware(\App\Http\Middleware\CheckRole::class.':Admin,Produksi');
+Route::post('/inventory', [MaterialController::class, 'store'])->name('inventorymaterial.store')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
+Route::put('/inventory/{material}', [MaterialController::class, 'update'])->name('inventorymaterial.update')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
+Route::delete('/inventory/{material}', [MaterialController::class, 'destroy'])->name('inventorymaterial.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
 
-Route::get('/keuangan', [FinancialController::class, 'index'])->name('financial');
-Route::get('/keuangan/export', [FinancialController::class, 'export'])->name('financial.export');
-Route::post('/keuangan/income', [FinancialController::class, 'storeIncome'])->name('financial.income.store');
-Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->name('financial.expense.store');
-Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy');
+// Financial: only Keuangan role may access financial pages
+Route::get('/keuangan', [FinancialController::class, 'index'])->name('financial')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
+Route::get('/keuangan/export', [FinancialController::class, 'export'])->name('financial.export')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
+Route::post('/keuangan/income', [FinancialController::class, 'storeIncome'])->name('financial.income.store')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
+Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->name('financial.expense.store')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
+Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
 
-Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan');
-Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf');
-Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
+// Laporan: Owner, Admin, Produksi can view general laporan. Exports are allowed for Owner and Keuangan (financial exports)
+Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
+Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Keuangan');
+Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Keuangan');

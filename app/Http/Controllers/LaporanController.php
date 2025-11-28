@@ -153,16 +153,23 @@ class LaporanController extends Controller
             ->get();
 
         // MONTHLY COMPARISON - Last 6 months
-        $monthlyData = Transaction::selectRaw("
-                strftime('%Y-%m', Tanggal) as month,
-                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,
-                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense
-            ")
-            ->groupBy('month')
-            ->orderBy('month', 'desc')
-            ->limit(6)
-            ->get()
-            ->reverse();
+            $driver = DB::connection()->getDriverName();
+
+            if ($driver === 'sqlite') {
+                $dateExpr = "strftime('%Y-%m', Tanggal)";
+            } else {
+                // For MySQL and others use DATE_FORMAT
+                $dateExpr = "DATE_FORMAT(Tanggal, '%Y-%m')";
+            }
+
+            $monthlyData = Transaction::selectRaw(
+                    "$dateExpr as month,\n                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,\n                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense"
+                )
+                ->groupBy('month')
+                ->orderBy('month', 'desc')
+                ->limit(6)
+                ->get()
+                ->reverse();
 
         return view('laporan', compact(
             'salesData',

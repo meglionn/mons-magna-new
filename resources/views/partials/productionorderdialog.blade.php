@@ -20,123 +20,112 @@
         class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
     </div>
 
-    {{-- Body --}}
-    <div class="grid gap-4">
+    {{-- Form --}}
+    <form method="POST" action="{{ route('order.production.store') }}" class="grid gap-4">
+      @csrf
+      
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Nomor Pesanan</label>
-          <input type="text" class="w-full border rounded-lg p-2" placeholder="PO-2025-001">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Nama Pelanggan</label>
-          <input type="text" class="w-full border rounded-lg p-2" placeholder="Nama pelanggan">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Produk</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Pilih produk</option>
-            <option>Kalla Baiq Classic (KB-001)</option>
-            <option>Lana Lale Boots (LL-002)</option>
-            <option>Chelsea Boot Black (CB-003)</option>
-            <option>Textile Oxford Shoes (TO-004)</option>
+          <label class="block text-sm font-medium mb-1">Nama Pelanggan *</label>
+          <select name="CustomerID" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+            <option value="">Pilih pelanggan (atau isi nama baru di bawah)</option>
+            @foreach($customers as $customer)
+              <option value="{{ $customer->CustomerID }}">{{ $customer->Nama }}</option>
+            @endforeach
           </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">SKU</label>
-          <input type="text" class="w-full border rounded-lg p-2" placeholder="KB-001">
-        </div>
-      </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Jumlah Total</label>
-          <input type="number" class="w-full border rounded-lg p-2" placeholder="10">
+          <div class="mt-2">
+            <label class="block text-xs text-gray-600 mb-1">Atau masukkan nama pelanggan baru</label>
+            <input type="text" name="CustomerName" placeholder="Nama pelanggan baru" class="w-full border rounded-lg p-2" />
+          </div>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Unit Selesai</label>
-          <input type="number" class="w-full border rounded-lg p-2" placeholder="0">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Tanggal Mulai</label>
-          <input type="date" class="w-full border rounded-lg p-2">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Tenggat Waktu</label>
-          <input type="date" class="w-full border rounded-lg p-2">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Tahap Saat Ini</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Pending</option>
-            <option>Pemotongan Pola</option>
-            <option>Persiapan Kulit</option>
-            <option>Penjahitan</option>
-            <option>Pemasangan Sol</option>
-            <option>Finishing</option>
-            <option>Kontrol Kualitas</option>
-            <option>Pengemasan</option>
-            <option>Selesai</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Tim yang Ditugaskan</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Pilih tim</option>
-            <option>Tim A</option>
-            <option>Tim B</option>
-            <option>Tim C</option>
-            <option>Tim D</option>
+          <label class="block text-sm font-medium mb-1">Produk *</label>
+          <select name="ProductID" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+            <option value="">Pilih produk</option>
+            @foreach($products as $product)
+              <option value="{{ $product->ProductID }}">{{ $product->NamaProduk }} - IDR {{ number_format($product->Harga) }}</option>
+            @endforeach
           </select>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Status</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Pending</option>
-            <option>Dalam Proses</option>
-            <option>Cek Kualitas</option>
-            <option>Selesai</option>
-            <option>Ditunda</option>
+          <label class="block text-sm font-medium mb-1">Tanggal Pesanan *</label>
+          <input type="date" name="Tanggal" required value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Jumlah *</label>
+          <input type="number" name="Jumlah" required min="1" value="1" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" placeholder="10">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Tanggal Mulai Produksi *</label>
+          <input type="date" name="TanggalMulai" required value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Target Selesai</label>
+          <input type="date" name="TenggalSelesai" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Status Order *</label>
+          <select name="StatusOrder" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+            <option value="Pending">Pending</option>
+            <option value="Proses" selected>Dalam Proses</option>
+            <option value="Produksi">Produksi</option>
+            <option value="Selesai">Selesai</option>
+            <option value="Ditunda">Ditunda</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Prioritas</label>
-          <select class="w-full border rounded-lg p-2">
-            <option>Rendah</option>
-            <option>Sedang</option>
-            <option>Tinggi</option>
-            <option>Mendesak</option>
+          <label class="block text-sm font-medium mb-1">Status Produksi *</label>
+          <select name="StatusProduksi" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+            <option value="Pending">Pending</option>
+            <option value="Pemotongan Pola">Pemotongan Pola</option>
+            <option value="Persiapan Kulit">Persiapan Kulit</option>
+            <option value="Penjahitan">Penjahitan</option>
+            <option value="Pemasangan Sol">Pemasangan Sol</option>
+            <option value="Finishing">Finishing</option>
+            <option value="Kontrol Kualitas">Kontrol Kualitas</option>
+            <option value="Pengemasan">Pengemasan</option>
+            <option value="Selesai">Selesai</option>
           </select>
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-1">Catatan</label>
-        <textarea class="w-full border rounded-lg p-2" rows="3" placeholder="Tambahkan instruksi khusus atau catatan..."></textarea>
+        <label class="block text-sm font-medium mb-1">Prioritas *</label>
+        <select name="Prioritas" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          <option value="Rendah">Rendah</option>
+          <option value="Sedang" selected>Sedang</option>
+          <option value="Tinggi">Tinggi</option>
+          <option value="Mendesak">Mendesak</option>
+        </select>
       </div>
-    </div>
 
-    {{-- Footer --}}
-    <div class="mt-6 flex justify-end gap-2 border-t pt-4">
-      <button 
-        @click="showProductionDialog = false"
-        class="border rounded-lg px-4 py-2 hover:bg-gray-100">
-        Batal
-      </button>
-      <button class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">
-        Simpan Pesanan
-      </button>
-    </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Catatan</label>
+        <textarea name="Keterangan" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Tambahkan instruksi khusus atau catatan..."></textarea>
+      </div>
+
+      {{-- Footer --}}
+      <div class="mt-6 flex justify-end gap-2 border-t pt-4">
+        <button 
+          type="button"
+          @click="showProductionDialog = false"
+          class="border rounded-lg px-4 py-2 hover:bg-gray-100">
+          Batal
+        </button>
+        <button type="submit" class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">
+          Simpan Pesanan
+        </button>
+      </div>
+    </form>
   </div>
 </div>
