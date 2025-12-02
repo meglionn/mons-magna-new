@@ -7,8 +7,8 @@
         {{-- Logo dan Judul --}}
         <div class="text-center mb-8">
             <div class="flex justify-center mb-6">
-                <div class="bg-white p-6 rounded-2xl shadow-lg">
-                    <img src="{{ asset('images/logo.png') }}" alt="Mons Magna" class="h-20 w-20">
+                <div class="bg-white p-4 rounded-2xl shadow-lg">
+                    <img src="{{ asset('images/logo.png') }}" alt="Mons Magna" class="h-30 w-20">
                 </div>
             </div>
             <h1 class="text-gray-900 mb-3 text-2xl font-semibold">Mons Magna</h1>

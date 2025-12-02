@@ -42,6 +42,14 @@ class Order extends Model
     }
 
     /**
+     * Relasi ke Produksi (one-to-many)
+     */
+    public function produksi()
+    {
+        return $this->hasMany(Produksi::class, 'OrderID', 'OrderID');
+    }
+
+    /**
      * Relasi ke CustomDetail (one-to-one)
      */
     public function customDetail()

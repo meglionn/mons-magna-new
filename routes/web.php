@@ -8,6 +8,7 @@ use App\Http\Controllers\FinancialController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\VerificationController;
 
 // Public routes
 Route::view('/', 'welcome')->name('welcome');
@@ -44,3 +45,11 @@ Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy']
 Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
 Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Keuangan');
 Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Keuangan');
+
+// Temporary debug route: returns recent orders with relations as JSON
+Route::get('/debug/orders', function () {
+	return \App\Models\Order::with(['customer', 'orderDetails.product', 'produksi', 'customDetail'])
+		->orderBy('OrderID', 'desc')
+		->take(50)
+		->get();
+});

@@ -9,12 +9,15 @@ use App\Models\OrderDetail;
 use App\Models\CustomDetail;
 use App\Models\Produksi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
     public function index()
 {
-    $orders = Order::with('customer')->orderBy('Tanggal', 'desc')->get();
+    $orders = Order::with(['customer', 'orderDetails.product', 'produksi', 'customDetail'])
+        ->orderBy('Tanggal', 'desc')
+        ->get();
     
     $stats = [
         'totalOrders' => Order::count(),
@@ -107,13 +110,24 @@ class OrderController extends Controller
         $order->update(['TotalHarga' => $orderDetail->Subtotal]);
 
         // Create Production record
-        Produksi::create([
+        $produksi = Produksi::create([
             'OrderID' => $order->OrderID,
             'TanggalMulai' => $validated['TanggalMulai'],
             'TanggalSelesai' => $validated['TenggalSelesai'] ?? null,
             'StatusProduksi' => $validated['StatusProduksi'],
             'Keterangan' => $validated['Keterangan'] ?? null,
         ]);
+
+        // Log created records for debugging
+        try {
+            Log::info('OrderController@storeProduction created', [
+                'order' => $order->toArray(),
+                'orderDetail' => $orderDetail->toArray(),
+                'produksi' => $produksi->toArray(),
+            ]);
+        } catch (\Exception $e) {
+            // swallow logging errors
+        }
 
         return redirect()->route('order')
             ->with('success', 'Pesanan produksi berhasil ditambahkan');
@@ -190,13 +204,88 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'CustomerID' => 'nullable|exists:customers,CustomerID',
-            'Tanggal' => 'required|date',
-            'StatusOrder' => 'required|string|max:50',
+            'CustomerName' => 'nullable|string|max:255',
+            'ProductName' => 'nullable|string|max:255',
+            'Tanggal' => 'nullable|date',
+            'TanggalMulai' => 'nullable|date',
+            'TenggalSelesai' => 'nullable|date',
+            'Jumlah' => 'nullable|integer|min:1',
+            'StatusOrder' => 'nullable|string|max:50',
+            'StatusProduksi' => 'nullable|string|max:50',
+            'Prioritas' => 'nullable|string|max:50',
+            'Keterangan' => 'nullable|string',
             'TotalHarga' => 'nullable|numeric',
+            'DepositPaid' => 'nullable|numeric',
+            'ProductType' => 'nullable|string',
+            'Size' => 'nullable|string',
+            'Color' => 'nullable|string',
+            'Material' => 'nullable|string',
+            'Style' => 'nullable|string',
+            'CustomFeatures' => 'nullable|string',
+            'SpecialRequirements' => 'nullable|string',
         ]);
 
-        $order->update($validated);
+        // Update order basic fields
+        $order->update([
+            'Tanggal' => $validated['Tanggal'] ?? $order->Tanggal,
+            'StatusOrder' => $validated['StatusOrder'] ?? $order->StatusOrder,
+            'TotalHarga' => $validated['TotalHarga'] ?? $order->TotalHarga,
+        ]);
+
+        // Update customer if CustomerName provided
+        if ($validated['CustomerName']) {
+            $order->customer->update(['Nama' => $validated['CustomerName']]);
+        }
+
+        // Update production order details
+        if ($order->orderDetails->first() && $validated['ProductName']) {
+            $product = Product::firstOrCreate(
+                ['NamaProduk' => $validated['ProductName']],
+                ['Harga' => 0]
+            );
+            $order->orderDetails->first()->update(['ProductID' => $product->ProductID]);
+        }
+
+        if ($order->orderDetails->first() && $validated['Jumlah']) {
+            $orderDetail = $order->orderDetails->first();
+            $orderDetail->update([
+                'Jumlah' => $validated['Jumlah'],
+                'Subtotal' => ($validated['Jumlah'] * $orderDetail->HargaSatuan),
+            ]);
+        }
+
+        // Update production record if exists
+        if ($order->produksi->first()) {
+            $produksi = $order->produksi->first();
+            $produksi->update([
+                'TanggalMulai' => $validated['TanggalMulai'] ?? $produksi->TanggalMulai,
+                'TanggalSelesai' => $validated['TenggalSelesai'] ?? $produksi->TanggalSelesai,
+                'StatusProduksi' => $validated['StatusProduksi'] ?? $produksi->StatusProduksi,
+                'Keterangan' => $validated['Keterangan'] ?? $produksi->Keterangan,
+            ]);
+        }
+
+        // Update custom detail if exists
+        if ($order->customDetail) {
+            $customNotes = json_decode($order->customDetail->CatatanTambahan, true) ?? [];
+            $customNotes = array_merge($customNotes, [
+                'ProductType' => $validated['ProductType'] ?? ($customNotes['ProductType'] ?? ''),
+                'Size' => $validated['Size'] ?? ($customNotes['Size'] ?? ''),
+                'Color' => $validated['Color'] ?? ($customNotes['Color'] ?? ''),
+                'Material' => $validated['Material'] ?? ($customNotes['Material'] ?? ''),
+                'Style' => $validated['Style'] ?? ($customNotes['Style'] ?? ''),
+                'CustomFeatures' => $validated['CustomFeatures'] ?? ($customNotes['CustomFeatures'] ?? ''),
+                'SpecialRequirements' => $validated['SpecialRequirements'] ?? ($customNotes['SpecialRequirements'] ?? ''),
+            ]);
+
+            $order->customDetail->update([
+                'Warna' => $validated['Color'] ?? $order->customDetail->Warna,
+                'Ukuran' => $validated['Size'] ?? $order->customDetail->Ukuran,
+                'JenisBahan' => $validated['Material'] ?? $order->customDetail->JenisBahan,
+                'Model' => $validated['ProductType'] ?? $order->customDetail->Model,
+                'CatatanTambahan' => json_encode($customNotes),
+            ]);
+        }
 
         return redirect()->route('order')
             ->with('success', 'Pesanan berhasil diupdate');

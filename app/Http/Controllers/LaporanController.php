@@ -17,6 +17,8 @@ class LaporanController extends Controller
 {
     public function laporan(Request $request)
     {
+        $user = auth()->user();
+        
         // Get date filter from request
         $filter = $request->get('filter', 'all');
         
@@ -42,7 +44,12 @@ class LaporanController extends Controller
                 $startDate = null;
                 break;
         }
-        
+
+        // If user is Keuangan, show only financial data
+        if ($user && $user->Role === 'Keuangan') {
+            return $this->laporanKeuangan($filter, $startDate, $endDate);
+        }
+
         // SALES DATA - From Orders Table with date filter
         $ordersQuery = Order::query();
         if ($startDate) {
@@ -178,6 +185,83 @@ class LaporanController extends Controller
             'materials',
             'lowStockMaterials',
             'topProducts',
+            'expensesByCategory',
+            'incomeByCategory',
+            'monthlyData',
+            'filter'
+        ));
+    }
+
+    /**
+     * Laporan Keuangan - Only financial data for Keuangan role
+     */
+    public function laporanKeuangan($filter = 'all', $startDate = null, $endDate = null)
+    {
+        if (!$endDate) $endDate = now();
+        
+        // FINANCIAL DATA - From Transactions Table with date filter
+        $revenueQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
+        $expenseQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
+        
+        if ($startDate) {
+            $revenueQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+            $expenseQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+        }
+        
+        $totalRevenue = $revenueQuery->sum('Jumlah');
+        $totalExpenses = $expenseQuery->sum('Jumlah');
+        $netProfit = $totalRevenue - $totalExpenses;
+        $profitMargin = $totalRevenue > 0 ? ($netProfit / $totalRevenue) * 100 : 0;
+        
+        $financialData = [
+            'totalRevenue' => $totalRevenue,
+            'totalExpenses' => $totalExpenses,
+            'netProfit' => $netProfit,
+            'profitMargin' => round($profitMargin, 1),
+        ];
+
+        // EXPENSES BY CATEGORY
+        $expensesByCategoryQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
+        if ($startDate) {
+            $expensesByCategoryQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+        }
+        $expensesByCategory = $expensesByCategoryQuery
+            ->selectRaw('Kategori, SUM(Jumlah) as total')
+            ->groupBy('Kategori')
+            ->orderByDesc('total')
+            ->get();
+
+        // INCOME BY CATEGORY
+        $incomeByCategoryQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
+        if ($startDate) {
+            $incomeByCategoryQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+        }
+        $incomeByCategory = $incomeByCategoryQuery
+            ->selectRaw('Kategori, SUM(Jumlah) as total')
+            ->groupBy('Kategori')
+            ->orderByDesc('total')
+            ->get();
+
+        // MONTHLY COMPARISON
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $dateExpr = "strftime('%Y-%m', Tanggal)";
+        } else {
+            $dateExpr = "DATE_FORMAT(Tanggal, '%Y-%m')";
+        }
+
+        $monthlyData = Transaction::selectRaw(
+                "$dateExpr as month,\n                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,\n                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense"
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->limit(6)
+            ->get()
+            ->reverse();
+
+        // Return view with only financial data
+        return view('laporan-keuangan', compact(
+            'financialData',
             'expensesByCategory',
             'incomeByCategory',
             'monthlyData',

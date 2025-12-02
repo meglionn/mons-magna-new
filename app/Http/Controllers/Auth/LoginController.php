@@ -33,6 +33,18 @@ class LoginController extends Controller
         // Log the user in using the user instance
         Auth::login($user);
 
+        // Redirect based on user role
+        if ($user->Role === 'Keuangan') {
+            return redirect()->intended(route('financial'));
+        } elseif ($user->Role === 'Produksi') {
+            return redirect()->intended(route('order'));
+        } elseif ($user->Role === 'Admin') {
+            return redirect()->intended(route('order'));
+        } elseif ($user->Role === 'Owner') {
+            return redirect()->intended(route('order'));
+        }
+
+        // Default fallback
         return redirect()->intended(route('order'));
     }
 }

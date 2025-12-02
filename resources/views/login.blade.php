@@ -49,10 +49,10 @@
         </button>
       </div>
     </form>
+
+    <p class="text-center text-gray-600 text-xs mt-6">
+      © 2025 Mons Magna. Hak cipta dilindungi.
+    </p>
   </div>
-    </div>
-        <p class="text-center text-gray-600 text-xs mt-6">
-            © 2025 Mons Magna. Hak cipta dilindungi.
-        </p>
-    </div>
+</div>
 @endsection
