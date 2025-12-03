@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use App\Models\Material;
 use App\Models\Customer;
 use App\Models\Product;
@@ -16,6 +18,39 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Seed Users
+        User::create([
+            'Username' => 'admin',
+            'Password' => Hash::make('admin123'),
+            'NamaLengkap' => 'Administrator',
+            'Email' => 'admin@monsmagna.com',
+            'Role' => 'Admin'
+        ]);
+
+        User::create([
+            'Username' => 'owner',
+            'Password' => Hash::make('owner123'),
+            'NamaLengkap' => 'Owner Mons Magna',
+            'Email' => 'owner@monsmagna.com',
+            'Role' => 'Owner'
+        ]);
+
+        User::create([
+            'Username' => 'produksi',
+            'Password' => Hash::make('produksi123'),
+            'NamaLengkap' => 'Staff Produksi',
+            'Email' => 'produksi@monsmagna.com',
+            'Role' => 'Produksi'
+        ]);
+
+        User::create([
+            'Username' => 'keuangan',
+            'Password' => Hash::make('keuangan123'),
+            'NamaLengkap' => 'Staff Keuangan',
+            'Email' => 'keuangan@monsmagna.com',
+            'Role' => 'Keuangan'
+        ]);
+
         // Seed Materials
         Material::create([
             'NamaBahan' => 'Kulit Sapi Premium',
@@ -53,7 +88,7 @@ class DatabaseSeeder extends Seeder
         // Seed Products
         $product1 = Product::create([
             'NamaProduk' => 'Sepatu Kasual Pria',
-            'JenisProduk' => 'Kasual',
+            'JenisProduk' => 'Kasual Pria',
             'Model' => 'Classic Oxford',
             'Ukuran' => 42,
             'Harga' => 750000
@@ -61,7 +96,7 @@ class DatabaseSeeder extends Seeder
 
         $product2 = Product::create([
             'NamaProduk' => 'Sepatu Kulit Custom',
-            'JenisProduk' => 'Custom',
+            'JenisProduk' => 'Kulit Custom',
             'Model' => 'Derby',
             'Ukuran' => 42,
             'Harga' => 1200000
