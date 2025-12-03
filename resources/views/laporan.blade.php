@@ -154,7 +154,7 @@ function formatIDR($amount) {
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-4 py-2 text-left">Material</th>
-                  <th class="px-4 py-2 text-left">SKU</th>
+                  <th class="px-4 py-2 text-left">Kategori</th>
                   <th class="px-4 py-2 text-right">Stok</th>
                   <th class="px-4 py-2 text-right">Nilai (IDR)</th>
                   <th class="px-4 py-2 text-left">Status</th>
@@ -163,14 +163,14 @@ function formatIDR($amount) {
               <tbody class="divide-y">
                 @forelse($materials as $material)
                 <tr>
-                  <td class="px-4 py-2">{{ $material->NamaMaterial }}</td>
-                  <td class="px-4 py-2">{{ $material->SKU }}</td>
-                  <td class="px-4 py-2 text-right">{{ $material->Stok }} {{ $material->Satuan }}</td>
-                  <td class="px-4 py-2 text-right">{{ formatIDR($material->Stok * $material->HargaPerUnit) }}</td>
+                  <td class="px-4 py-2">{{ $material->NamaBahan }}</td>
+                  <td class="px-4 py-2">{{ $material->Kategori }}</td>
+                  <td class="px-4 py-2 text-right">{{ $material->StokBahan }} {{ $material->JenisBahan }}</td>
+                  <td class="px-4 py-2 text-right">{{ formatIDR($material->StokBahan * $material->HargaSatuan) }}</td>
                   <td class="px-4 py-2">
-                    @if($material->Stok == 0)
+                    @if($material->StokBahan == 0)
                       <span class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">Habis</span>
-                    @elseif($material->Stok < 10)
+                    @elseif($material->StokBahan < $material->MinimumStok)
                       <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">Stok Rendah</span>
                     @else
                       <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Sehat</span>
@@ -193,7 +193,7 @@ function formatIDR($amount) {
           <h3 class="font-semibold text-yellow-800 mb-2">⚠️ Peringatan Stok Rendah</h3>
           <ul class="text-sm text-yellow-700 space-y-1">
             @foreach($lowStockMaterials as $material)
-            <li>{{ $material->NamaMaterial }} – Stok: {{ $material->Stok }} {{ $material->Satuan }} (Perlu reorder)</li>
+            <li>{{ $material->NamaBahan }} – Stok: {{ $material->StokBahan }} (Min: {{ $material->MinimumStok }})</li>
             @endforeach
           </ul>
         </div>

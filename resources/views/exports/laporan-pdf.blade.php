@@ -45,9 +45,9 @@
             <tr>
                 @if($type == 'inventory')
                     <th>Material</th>
-                    <th>SKU</th>
+                    <th>Kategori</th>
                     <th>Stok</th>
-                    <th>Satuan</th>
+                    <th>Jenis Bahan</th>
                     <th>Nilai (IDR)</th>
                     <th>Status</th>
                 @elseif($type == 'sales')

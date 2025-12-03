@@ -77,13 +77,15 @@ class LaporanController extends Controller
         $materials = Material::all();
         $totalMaterials = $materials->count();
         $totalValue = $materials->sum(function($material) {
-            return $material->Stok * $material->HargaPerUnit;
+            return $material->StokBahan * $material->HargaSatuan;
         });
         
-        // Low stock: items with stock less than 10
+        // Low stock: items with stock less than MinimumStok
         // Out of stock: items with stock = 0
-        $lowStockItems = $materials->where('Stok', '>', 0)->where('Stok', '<', 10)->count();
-        $outOfStock = $materials->where('Stok', '=', 0)->count();
+        $lowStockItems = $materials->filter(function($material) {
+            return $material->StokBahan > 0 && $material->StokBahan < $material->MinimumStok;
+        })->count();
+        $outOfStock = $materials->where('StokBahan', '=', 0)->count();
         
         $inventoryData = [
             'totalMaterials' => $totalMaterials,
@@ -114,7 +116,9 @@ class LaporanController extends Controller
         ];
 
         // Get materials list with low stock warnings
-        $lowStockMaterials = $materials->where('Stok', '>', 0)->where('Stok', '<', 10);
+        $lowStockMaterials = $materials->filter(function($material) {
+            return $material->StokBahan > 0 && $material->StokBahan < $material->MinimumStok;
+        });
 
         // TOP PRODUCTS - From OrderDetails joined with Products and Orders (with date filter)
         $topProductsQuery = DB::table('orderdetails')
@@ -307,7 +311,7 @@ class LaporanController extends Controller
             
             public function headings(): array {
                 if ($this->type == 'inventory') {
-                    return ['Material', 'SKU', 'Stok', 'Satuan', 'Nilai (IDR)', 'Status'];
+                    return ['Material', 'Kategori', 'Stok', 'Jenis Bahan', 'Nilai (IDR)', 'Status'];
                 } elseif ($this->type == 'sales') {
                     return ['Produk', 'SKU', 'Jumlah Terjual', 'Pendapatan (IDR)'];
                 } else {
@@ -340,13 +344,13 @@ class LaporanController extends Controller
         
         if ($type == 'inventory') {
             return Material::all()->map(function($material) {
-                $value = $material->Stok * $material->HargaPerUnit;
-                $status = $material->Stok == 0 ? 'Habis' : ($material->Stok < 10 ? 'Stok Rendah' : 'Sehat');
+                $value = $material->StokBahan * $material->HargaSatuan;
+                $status = $material->StokBahan == 0 ? 'Habis' : ($material->StokBahan < $material->MinimumStok ? 'Stok Rendah' : 'Sehat');
                 return [
-                    $material->NamaMaterial,
-                    $material->SKU,
-                    $material->Stok,
-                    $material->Satuan,
+                    $material->NamaBahan,
+                    $material->Kategori,
+                    $material->StokBahan,
+                    $material->JenisBahan,
                     $value,
                     $status
                 ];
