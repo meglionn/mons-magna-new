@@ -46,7 +46,7 @@
           <th class="px-4 py-2 text-left font-medium text-gray-600">Produk</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Jumlah</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Spesifikasi</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Keterangan</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-600">Total Harga</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Tahap</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Tenggat</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Prioritas</th>
@@ -56,7 +56,7 @@
       </thead>
       <tbody class="divide-y divide-gray-200">
         @forelse($orders as $order)
-          @if(!$order->customDetail)
+          @if($order->orderDetails->count() > 0)
             <tr>
               <td class="px-4 py-2">#{{ $order->OrderID }}</td>
               <td class="px-4 py-2">{{ $order->customer?->Nama ?? 'N/A' }}</td>
@@ -69,15 +69,20 @@
               </td>
               <td class="px-4 py-2">{{ $order->orderDetails->sum('Jumlah') ?: '-' }}</td>
               <td class="px-4 py-2">
-                @if($order->customDetail && $order->customDetail->Ukuran)
-                  {{ $order->customDetail->Ukuran }}
-                @elseif($order->orderDetails->first() && $order->orderDetails->first()->product && $order->orderDetails->first()->product->Ukuran)
-                  {{ $order->orderDetails->first()->product->Ukuran }}
-                @else
-                  -
-                @endif
+                @php
+                  $detail = $order->orderDetails->first();
+                  $spesifikasi = $detail ? array_filter([
+                    $detail->Ukuran,
+                    $detail->Warna,
+                    $detail->JenisBahan,
+                  ]) : [];
+                @endphp
+                {{ count($spesifikasi) > 0 ? implode(' / ', $spesifikasi) : '-' }}
               </td>
-              <td class="px-4 py-2">{{ $order->produksi?->first()?->Keterangan ?? '-' }}</td>
+              @php
+                $calculatedTotal = $order->produksi?->first()?->TotalHarga ?? $order->TotalHarga ?? $order->orderDetails->sum('Subtotal') ?? 0;
+              @endphp
+              <td class="px-4 py-2">IDR {{ number_format($calculatedTotal, 0, ',', '.') }}</td>
               <td class="px-4 py-2">{{ $order->produksi?->first()?->StatusProduksi ?? '-' }}</td>
               <td class="px-4 py-2">{{ $order->produksi?->first()?->TanggalSelesai?->format('d/m/Y') ?? '-' }}</td>
               <td class="px-4 py-2">

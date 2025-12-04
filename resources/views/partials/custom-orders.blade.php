@@ -56,7 +56,7 @@
       </thead>
       <tbody class="divide-y divide-gray-200">
         @forelse($orders as $order)
-          @if($order->customDetail)
+          @if($order->customDetail && $order->orderDetails->count() === 0)
             <tr>
               <td class="px-4 py-2">#{{ $order->OrderID }}</td>
               <td class="px-4 py-2">
@@ -77,8 +77,16 @@
                 {{ $customData['Material'] ?? $order->customDetail->JenisBahan ?? '-' }}
               </td>
               <td class="px-4 py-2 text-right">IDR {{ number_format($order->TotalHarga, 0, ',', '.') }}</td>
-              <td class="px-4 py-2 text-right text-yellow-600">IDR {{ number_format(max(0, $order->TotalHarga - ($order->DepositPaid ?? 0)), 0, ',', '.') }}</td>
-              <td class="px-4 py-2">{{ $order->TenggalSelesai?->format('d/m/Y') ?? '-' }}</td>
+              @php
+                $orderTotal = $order->TotalHarga ?? $order->orderDetails->sum('Subtotal') ?? 0;
+                $deposit = $order->DepositPaid ?? 0;
+                $sisa = max(0, $orderTotal - $deposit);
+              @endphp
+              <td class="px-4 py-2 text-right text-yellow-600">IDR {{ number_format($sisa, 0, ',', '.') }}</td>
+              @php
+                $customTgl = data_get(json_decode($order->customDetail->CatatanTambahan, true) ?? [], 'TenggalSelesai');
+              @endphp
+              <td class="px-4 py-2">{{ $customTgl ? \Carbon\Carbon::parse($customTgl)->format('d/m/Y') : ($order->TenggalSelesai?->format('d/m/Y') ?? '-') }}</td>
               <td class="px-4 py-2">
                 <span class="px-2 py-1 text-xs @if($order->Prioritas === 'Mendesak') bg-red-100 text-red-700 @else bg-orange-100 text-orange-700 @endif rounded-lg">
                   {{ $order->Prioritas ?? 'Normal' }}
@@ -120,9 +128,10 @@
   <div id="editCustomModal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 24px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; margin: 40px auto;">
       <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Edit Pesanan Custom</h3>
-      <form id="editCustomForm" method="POST">
+      <form id="editCustomForm" action="" method="POST">
         @csrf
         @method('PUT')
+
 
         <div style="margin-bottom: 12px;">
           <label style="display:block; font-weight:600; margin-bottom:6px;">Nama Pelanggan</label>
@@ -162,8 +171,7 @@
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Total Harga (IDR)</label>
-            <input type="number" id="editTotalHarga" name="TotalHarga" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <!-- Total Harga editing removed -->
           </div>
           <div>
             <label style="display:block; font-weight:600; margin-bottom:6px;">Deposit Paid (IDR)</label>
@@ -213,45 +221,53 @@
       </form>
     </div>
   </div>
-
   <script>
-    function openEditCustomModal(orderId) {
-      fetch('/debug/orders').then(r => r.json()).then(orders => {
-        const order = orders.find(o => o.OrderID === orderId);
-        if (!order || !order.customDetail) return;
+  function openEditCustomModal(orderId) {
+    // SET FORM ACTION
+    document.getElementById('editCustomForm').action = `/pesanan/${orderId}`;
 
-        const customData = JSON.parse(order.customDetail?.CatatanTambahan || '{}');
+    // Fetch latest orders (same approach as other modals) and fill form
+    fetch('/debug/orders').then(r => r.json()).then(orders => {
+      const order = orders.find(o => o.OrderID === orderId);
+      if (!order) {
+        alert('Data order tidak ditemukan.');
+        return;
+      }
 
-        // fill fields
-        document.getElementById('editCustomerName').value = order.customer?.Nama || '';
-        document.getElementById('editTanggal').value = order.Tanggal ? order.Tanggal.split('T')[0] : '';
-        document.getElementById('editTenggalSelesai').value = customData?.TenggalSelesai ? customData.TenggalSelesai.split('T')[0] : '';
-        document.getElementById('editProductType').value = order.customDetail?.Model || customData?.ProductType || '';
-        document.getElementById('editSize').value = order.customDetail?.Ukuran || customData?.Size || '';
-        document.getElementById('editColor').value = order.customDetail?.Warna || customData?.Color || '';
-        document.getElementById('editMaterial').value = order.customDetail?.JenisBahan || customData?.Material || '';
-        document.getElementById('editTotalHarga').value = order.TotalHarga || 0;
-        document.getElementById('editDepositPaid').value = order.DepositPaid || 0;
-        document.getElementById('editStatusOrder').value = order.StatusOrder || 'Tertunda';
-        document.getElementById('editPrioritas').value = order.Prioritas || 'Normal';
-        document.getElementById('editStyle').value = customData?.Style || '';
-        document.getElementById('editCustomFeatures').value = customData?.CustomFeatures || '';
-        document.getElementById('editSpecialRequirements').value = customData?.SpecialRequirements || '';
+      const custom = order.customDetail || {};
+      const note = custom.CatatanTambahan ? JSON.parse(custom.CatatanTambahan) : {};
 
-        const form = document.getElementById('editCustomForm');
-        form.action = '/pesanan/' + orderId;
+      // Isi form
+      document.getElementById('editCustomerName').value = order.customer?.Nama ?? "";
+      document.getElementById('editTanggal').value = order.Tanggal ? order.Tanggal.split('T')[0] : "";
+      document.getElementById('editTenggalSelesai').value = note.TenggalSelesai ? note.TenggalSelesai.split('T')[0] : (order.TenggalSelesai ?? "");
 
-        document.getElementById('editCustomModal').style.display = 'flex';
-      }).catch(e => console.error(e));
-    }
+      document.getElementById('editProductType').value = note.ProductType ?? custom.Model ?? "";
+      document.getElementById('editSize').value = note.Size ?? custom.Ukuran ?? "";
+      document.getElementById('editColor').value = note.Color ?? custom.Warna ?? "";
+      document.getElementById('editMaterial').value = note.Material ?? custom.JenisBahan ?? "";
 
-    function closeEditCustomModal() {
-      document.getElementById('editCustomModal').style.display = 'none';
-    }
+      // TotalHarga editing removed
+      document.getElementById('editDepositPaid').value = order.DepositPaid ?? 0;
 
-    // close when clicking outside
-    document.getElementById('editCustomModal')?.addEventListener('click', function(e) {
-      if (e.target === this) closeEditCustomModal();
+      document.getElementById('editStatusOrder').value = order.StatusOrder ?? "Tertunda";
+      document.getElementById('editPrioritas').value = order.Prioritas ?? "Normal";
+
+      document.getElementById('editStyle').value = note.Style ?? "";
+      document.getElementById('editCustomFeatures').value = note.CustomFeatures ?? "";
+      document.getElementById('editSpecialRequirements').value = note.SpecialRequirements ?? "";
+
+      // Tampilkan modal
+      document.getElementById('editCustomModal').style.display = 'flex';
+    }).catch(err => {
+      console.error('Gagal mengambil data order:', err);
+      alert('Gagal memuat data order. Refresh halaman dan coba lagi.');
     });
-  </script>
+}
+
+
+  function closeEditCustomModal() {
+    document.getElementById('editCustomModal').style.display = 'none';
+  }
+</script>
 </div>

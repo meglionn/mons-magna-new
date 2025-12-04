@@ -37,7 +37,6 @@ class FinancialExport implements FromCollection, WithHeadings, WithStyles, WithC
 
     public function styles(Worksheet $sheet)
     {
-        // Style untuk header
         $sheet->getStyle('A1:C1')->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -59,10 +58,8 @@ class FinancialExport implements FromCollection, WithHeadings, WithStyles, WithC
             ]
         ]);
 
-        // Row height untuk header
         $sheet->getRowDimension(1)->setRowHeight(25);
 
-        // Style untuk data rows
         $lastRow = $sheet->getHighestRow();
         $sheet->getStyle('A2:C' . $lastRow)->applyFromArray([
             'borders' => [
@@ -76,10 +73,7 @@ class FinancialExport implements FromCollection, WithHeadings, WithStyles, WithC
             ]
         ]);
 
-        // Alignment untuk kolom numerik
         $sheet->getStyle('B2:C' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // Number format
         $sheet->getStyle('B2:B' . $lastRow)->getNumberFormat()->setFormatCode('#,##0');
 
         return [];

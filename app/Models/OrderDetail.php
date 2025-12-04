@@ -19,6 +19,9 @@ class OrderDetail extends Model
         'Jumlah',
         'HargaSatuan',
         'Subtotal',
+        'Ukuran',
+        'Warna',
+        'JenisBahan',
     ];
 
     protected $casts = [

@@ -35,10 +35,10 @@
           <th class="px-4 py-2 text-left font-medium text-gray-600">Tipe</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Pelanggan</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Produk/Spesifikasi</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Harga</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Tenggat</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Prioritas</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Status</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-600">Keterangan</th>
           <th class="px-4 py-2 text-center font-medium text-gray-600">Aksi</th>
         </tr>
       </thead>
@@ -47,31 +47,42 @@
           <tr>
             <td class="px-4 py-2">#{{ $order->OrderID }}</td>
             <td class="px-4 py-2">
-              <span class="px-2 py-1 text-xs rounded-full @if($order->customDetail) bg-purple-100 text-purple-700 @else bg-blue-100 text-blue-700 @endif">
-                {{ $order->customDetail ? 'Custom' : 'Produksi' }}
+              <span class="px-2 py-1 text-xs rounded-full @if($order->orderDetails->count() > 0) bg-blue-100 text-blue-700 @else bg-purple-100 text-purple-700 @endif">
+                {{ $order->orderDetails->count() > 0 ? 'Produksi' : 'Custom' }}
               </span>
             </td>
             <td class="px-4 py-2">{{ $order->customer?->Nama ?? 'N/A' }}</td>
             <td class="px-4 py-2 text-sm">
-              @if($order->customDetail)
-                @php
-                  $customData = json_decode($order->customDetail->CatatanTambahan, true) ?? [];
-                @endphp
-                {{ $customData['Size'] ?? $order->customDetail->Ukuran ?? '-' }} / 
-                {{ $customData['Color'] ?? $order->customDetail->Warna ?? '-' }} / 
-                {{ $customData['Material'] ?? $order->customDetail->JenisBahan ?? '-' }}
-              @else
+              @if($order->orderDetails->count() > 0)
                 @if($order->orderDetails->first())
                   {{ $order->orderDetails->first()->product?->NamaProduk ?? 'Produk' }}
-                  @if($order->orderDetails->first()->product?->Ukuran)
-                    ({{ $order->orderDetails->first()->product->Ukuran }})
+                  @php
+                    $detail = $order->orderDetails->first();
+                    $spesifikasi = $detail ? array_filter([
+                      $detail->Ukuran,
+                      $detail->Warna,
+                      $detail->JenisBahan,
+                    ]) : [];
+                  @endphp
+                  @if(count($spesifikasi) > 0)
+                    ({{ implode(' / ', $spesifikasi) }})
                   @endif
+                @else
+                  -
+                @endif
+              @else
+                @if($order->customDetail)
+                  @php
+                    $customData = json_decode($order->customDetail->CatatanTambahan, true) ?? [];
+                  @endphp
+                  {{ $customData['Size'] ?? $order->customDetail->Ukuran ?? '-' }} / 
+                  {{ $customData['Color'] ?? $order->customDetail->Warna ?? '-' }} / 
+                  {{ $customData['Material'] ?? $order->customDetail->JenisBahan ?? '-' }}
                 @else
                   -
                 @endif
               @endif
             </td>
-            <td class="px-4 py-2 text-left">IDR {{ number_format($order->TotalHarga, 0, ',', '.') }}</td>
             <td class="px-4 py-2">
               @if($order->customDetail)
                 @php $customTgl = data_get(json_decode($order->customDetail->CatatanTambahan, true) ?? [], 'TenggalSelesai'); @endphp
@@ -79,7 +90,7 @@
               @else
                 {{ $order->produksi?->first()?->TanggalSelesai?->format('d/m/Y') ?? '-' }}
               @endif
-            </td>
+            </td>            
             <td class="px-4 py-2">
               <span class="px-2 py-1 text-xs @if($order->Prioritas === 'Mendesak' || $order->Prioritas === 'Tinggi') bg-red-100 text-red-700 @elseif($order->Prioritas === 'Sedang') bg-orange-100 text-orange-700 @else bg-green-100 text-green-700 @endif rounded-lg">
                 {{ $order->Prioritas ?? 'Normal' }}
@@ -89,6 +100,14 @@
               <span class="px-2 py-1 text-xs @if($order->StatusOrder === 'Tertunda') bg-yellow-100 text-yellow-700 @elseif($order->StatusOrder === 'Selesai') bg-green-100 text-green-700 @else bg-blue-100 text-blue-700 @endif rounded-lg">
                 {{ $order->StatusOrder }}
               </span>
+            </td>
+            <td class="px-4 py-2 text-left">
+              @if($order->customDetail)
+                @php $customData = json_decode($order->customDetail->CatatanTambahan, true) ?? []; @endphp
+                {{ \Illuminate\Support\Str::limit($customData['CustomFeatures'] ?? $customData['SpecialRequirements'] ?? $order->customDetail->Model ?? '-', 80) }}
+              @else
+                {{ \Illuminate\Support\Str::limit($order->produksi?->first()?->Keterangan ?? '-', 80) }}
+              @endif
             </td>
             <td class="px-4 py-2 text-center">
               <div class="flex justify-center gap-2">
@@ -164,25 +183,25 @@
             <div>
               <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Status Order</label>
               <select id="editStatusOrder" name="StatusOrder" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
-                <option value="Pending">Pending</option>
-                <option value="Proses">Dalam Proses</option>
-                <option value="Produksi">Produksi</option>
-                <option value="Selesai">Selesai</option>
-                <option value="Ditunda">Ditunda</option>
+          <option value="Pending">Pending</option>
+          <option value="Proses">Dalam Proses</option>
+          <option value="Produksi">Produksi</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Ditunda">Ditunda</option>
               </select>
             </div>
             <div>
               <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Status Produksi</label>
               <select id="editStatusProduksi" name="StatusProduksi" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
-                <option value="Pending">Pending</option>
-                <option value="Pemotongan Pola">Pemotongan Pola</option>
-                <option value="Persiapan Kulit">Persiapan Kulit</option>
-                <option value="Penjahitan">Penjahitan</option>
-                <option value="Pemasangan Sol">Pemasangan Sol</option>
-                <option value="Finishing">Finishing</option>
-                <option value="Kontrol Kualitas">Kontrol Kualitas</option>
-                <option value="Pengemasan">Pengemasan</option>
-                <option value="Selesai">Selesai</option>
+          <option value="Pending">Pending</option>
+          <option value="Pemotongan Pola">Pemotongan Pola</option>
+          <option value="Persiapan Kulit">Persiapan Kulit</option>
+          <option value="Penjahitan">Penjahitan</option>
+          <option value="Pemasangan Sol">Pemasangan Sol</option>
+          <option value="Finishing">Finishing</option>
+          <option value="Kontrol Kualitas">Kontrol Kualitas</option>
+          <option value="Pengemasan">Pengemasan</option>
+          <option value="Selesai">Selesai</option>
               </select>
             </div>
           </div>
@@ -202,8 +221,10 @@
             </div>
           </div>
 
+          <!-- Total Harga removed per request -->
+
           <div style="margin-bottom: 16px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Catatan</label>
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Keterangan</label>
             <textarea id="editKeterangan" name="Keterangan" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px; min-height: 80px;"></textarea>
           </div>
         </div>
@@ -242,8 +263,7 @@
               </select>
             </div>
             <div>
-              <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Total Harga (IDR)</label>
-              <input type="number" id="editCustomTotalHarga" name="TotalHarga" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+              <!-- Total Harga removed per request -->
             </div>
           </div>
 
@@ -311,7 +331,7 @@
             document.getElementById('editCustomSize').value = order.customDetail?.Ukuran || customData?.Size || '';
             document.getElementById('editCustomColor').value = order.customDetail?.Warna || customData?.Color || '';
             document.getElementById('editCustomMaterial').value = order.customDetail?.JenisBahan || customData?.Material || '';
-            document.getElementById('editCustomTotalHarga').value = order.TotalHarga || 0;
+            // TotalHarga editing removed; skip setting editCustomTotalHarga
             document.getElementById('editDepositPaid').value = order.DepositPaid || 0;
             document.getElementById('editStyle').value = customData?.Style || '';
             document.getElementById('editCustomFeatures').value = customData?.CustomFeatures || '';

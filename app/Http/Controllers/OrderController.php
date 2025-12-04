@@ -65,6 +65,9 @@ class OrderController extends Controller
         $validated = $request->validate([
             'CustomerName' => 'required|string|max:255',
             'ProductName' => 'required|string|max:255',
+            'CustomerEmail' => 'nullable|email|max:100',
+            'CustomerPhone' => 'nullable|string|max:20',
+            'TotalHarga' => 'required|numeric|min:0',
             'Tanggal' => 'required|date',
             'TanggalMulai' => 'required|date',
             'TenggalSelesai' => 'nullable|date|after:TanggalMulai',
@@ -78,20 +81,33 @@ class OrderController extends Controller
             'Material' => 'nullable|string',
         ]);
 
-        // Create Order
-        // Ensure customer exists (create if needed)
+        // PERBAIKAN: Cek customer berdasarkan email (jika ada) atau nama
+    if (!empty($validated['CustomerEmail'])) {
+        // Prioritas cek berdasarkan email
+        $customer = Customer::where('Email', $validated['CustomerEmail'])->first();
+    } else {
+        // Jika tidak ada email, cek berdasarkan nama (case-insensitive)
+        $customer = Customer::whereRaw('LOWER(Nama) = ?', [strtolower($validated['CustomerName'])])->first();
+    }
+
+    // Jika customer tidak ditemukan, buat baru
+    if (!$customer) {
         $customer = Customer::create([
             'Nama' => $validated['CustomerName'],
             'Email' => $request->input('CustomerEmail'),
             'NoTelp' => $request->input('CustomerPhone'),
             'Alamat' => $request->input('CustomerAlamat'),
         ]);
+    }
 
         // Create or update product with specification
-        $productData = [
-            'Harga' => 0,
-            'Ukuran' => $validated['Size'] ?? null,
-        ];
+        $product = Product::firstOrCreate(
+            ['NamaProduk' => $validated['ProductName']],
+            [
+                'Harga' => 0,
+                'Model' => 'Standard',
+                'Ukuran' => 0
+            ]);
         
         // Create product with unique name including specifications if provided
         $productName = $validated['ProductName'];
@@ -99,11 +115,6 @@ class OrderController extends Controller
             $productName .= ' (' . implode(' / ', array_filter([$validated['Color'], $validated['Material']])) . ')';
         }
         
-        $product = Product::firstOrCreate(
-            ['NamaProduk' => $productName],
-            $productData
-        );
-
         $order = Order::create([
             'CustomerID' => $customer->CustomerID,
             'Tanggal' => $validated['Tanggal'],
@@ -112,13 +123,16 @@ class OrderController extends Controller
             'Prioritas' => $validated['Prioritas'],
         ]);
 
-        // Create Order Detail
+        // Create Order Detail (include specs on orderdetails)
         $orderDetail = OrderDetail::create([
             'OrderID' => $order->OrderID,
             'ProductID' => $product->ProductID,
             'Jumlah' => $validated['Jumlah'],
             'HargaSatuan' => $product->Harga,
             'Subtotal' => $product->Harga * $validated['Jumlah'],
+            'Ukuran' => $validated['Size'] ?? null,
+            'Warna' => $validated['Color'] ?? null,
+            'JenisBahan' => $validated['Material'] ?? null,
         ]);
 
         // Update order total
@@ -132,6 +146,12 @@ class OrderController extends Controller
             'StatusProduksi' => $validated['StatusProduksi'],
             'Keterangan' => $validated['Keterangan'] ?? null,
         ]);
+
+        // Do not create CustomDetail for production orders; specs are stored on orderdetails.
+
+        // Note: Do NOT add specification columns to `orderdetails` here because
+        // the `orderdetails` table does not have `Ukuran`, `Warna`, or `JenisBahan` columns.
+        // Specifications are saved in `customdetails` (created above) when provided.
 
         // Log created records for debugging
         try {
@@ -151,7 +171,7 @@ class OrderController extends Controller
     public function storeCustom(Request $request)
     {
         $validated = $request->validate([
-            'CustomerName' => 'required|string|max:255',
+        'CustomerName' => 'required|string|max:255',
         'Tanggal' => 'required|date',
         'TenggalSelesai' => 'required|date',
         'TotalHarga' => 'required|numeric|min:0',
@@ -173,18 +193,41 @@ class OrderController extends Controller
     ]);
 
         // Ensure customer exists (create if needed)
+    if (!empty($validated['CustomerEmail'])) {
+        // Prioritas cek berdasarkan email
+        $customer = Customer::where('Email', $validated['CustomerEmail'])->first();
+    } else {
+        // Jika tidak ada email, cek berdasarkan nama (case-insensitive)
+        $customer = Customer::whereRaw('LOWER(Nama) = ?', [strtolower($validated['CustomerName'])])->first();
+    }
+
+    // Jika customer tidak ditemukan, buat baru
+    if (!$customer) {
         $customer = Customer::create([
             'Nama' => $validated['CustomerName'],
             'Email' => $request->input('CustomerEmail'),
             'NoTelp' => $request->input('CustomerPhone'),
             'Alamat' => $request->input('CustomerAlamat'),
         ]);
+    }
+        
+        // For custom orders create or find a product record using ProductType
+        $product = Product::firstOrCreate(
+            ['NamaProduk' => $validated['ProductType']],
+            [
+                'Harga' => $validated['TotalHarga'] ?? 0,
+                'Model' => $validated['ProductType'] ?? 'Custom',
+                'Ukuran' => $validated['Size'] ?? null,
+            ]
+        );
+        
         // Create Order
         $order = Order::create([
             'CustomerID' => $customer->CustomerID,
             'Tanggal' => $validated['Tanggal'],
             'StatusOrder' => $validated['StatusOrder'],
             'TotalHarga' => $validated['TotalHarga'],
+            'DepositPaid' => $validated['DepositPaid'] ?? 0,
         ]);
 
     // Create Custom Detail
@@ -247,6 +290,7 @@ class OrderController extends Controller
             'StatusOrder' => $validated['StatusOrder'] ?? $order->StatusOrder,
             'TotalHarga' => $validated['TotalHarga'] ?? $order->TotalHarga,
             'Prioritas' => $validated['Prioritas'] ?? $order->Prioritas,
+            'DepositPaid' => $validated['DepositPaid'] ?? $order->DepositPaid,
         ]);
 
         // Update customer if CustomerName provided
@@ -320,8 +364,9 @@ class OrderController extends Controller
             ]);
         }
 
-        // Update custom detail if exists
+        // Update custom detail for custom orders
         if ($order->customDetail) {
+            // Update existing custom detail
             $customNotes = json_decode($order->customDetail->CatatanTambahan, true) ?? [];
             $customNotes = array_merge($customNotes, [
                 'ProductType' => $validated['ProductType'] ?? ($customNotes['ProductType'] ?? ''),
@@ -343,18 +388,45 @@ class OrderController extends Controller
             ]);
         }
 
+        // Update specs on production order's first order detail if provided
+        if ($order->orderDetails->count() > 0 && (!empty($validated['Size']) || !empty($validated['Color']) || !empty($validated['Material']))) {
+            $orderDetail = $order->orderDetails->first();
+            $orderDetail->update([
+                'Ukuran' => $validated['Size'] ?? $orderDetail->Ukuran,
+                'Warna' => $validated['Color'] ?? $orderDetail->Warna,
+                'JenisBahan' => $validated['Material'] ?? $orderDetail->JenisBahan,
+            ]);
+        }
+
         return redirect()->route('order')
             ->with('success', 'Pesanan berhasil diupdate');
     }
 
     public function destroy(Order $order)
     {
+        // Simpan CustomerID sebelum order dihapus
+        $customerId = $order->CustomerID;
+        
         // Delete related records first
         $order->orderDetails()->delete();
         $order->customDetail()->delete();
         Produksi::where('OrderID', $order->OrderID)->delete();
         
+        // Delete order
         $order->delete();
+        
+        // Cek apakah customer masih punya order lain
+        if ($customerId) {
+            $customer = Customer::find($customerId);
+            if ($customer) {
+                $remainingOrders = Order::where('CustomerID', $customerId)->count();
+                
+                // Jika tidak ada order lagi, hapus customer
+                if ($remainingOrders == 0) {
+                    $customer->delete();
+                }
+            }
+        }
 
         return redirect()->route('order')
             ->with('success', 'Pesanan berhasil dihapus');

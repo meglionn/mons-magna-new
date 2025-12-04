@@ -38,7 +38,6 @@ class SalesExport implements FromCollection, WithHeadings, WithStyles, WithColum
 
     public function styles(Worksheet $sheet)
     {
-        // Style untuk header
         $sheet->getStyle('A1:D1')->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -60,10 +59,8 @@ class SalesExport implements FromCollection, WithHeadings, WithStyles, WithColum
             ]
         ]);
 
-        // Row height untuk header
         $sheet->getRowDimension(1)->setRowHeight(25);
 
-        // Style untuk data rows
         $lastRow = $sheet->getHighestRow();
         $sheet->getStyle('A2:D' . $lastRow)->applyFromArray([
             'borders' => [
@@ -77,10 +74,7 @@ class SalesExport implements FromCollection, WithHeadings, WithStyles, WithColum
             ]
         ]);
 
-        // Alignment untuk kolom numerik
         $sheet->getStyle('C2:D' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // Number format
         $sheet->getStyle('C2:C' . $lastRow)->getNumberFormat()->setFormatCode('#,##0');
         $sheet->getStyle('D2:D' . $lastRow)->getNumberFormat()->setFormatCode('#,##0');
 

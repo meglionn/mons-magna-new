@@ -46,6 +46,13 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Total Harga (IDR) *</label>
+          <input type="number" name="TotalHarga" required min="0" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" placeholder="1200000">
+        </div>
+      </div>
+
       <div class="grid grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Ukuran (Size)</label>

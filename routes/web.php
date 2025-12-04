@@ -45,8 +45,6 @@ Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy']
 
 // Laporan: Owner, Admin, Produksi can view general laporan. Exports are allowed for Owner and Keuangan
 Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
-Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
-Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
 
 // Temporary debug route: returns recent orders with relations as JSON
 Route::get('/debug/orders', function () {

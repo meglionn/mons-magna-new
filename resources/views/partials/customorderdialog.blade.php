@@ -22,29 +22,7 @@ x-show="showDialog"
     </div>
 
     {{-- FORM --}}
-    <form 
-      method="POST" 
-      action="{{ route('order.custom.store') }}"
-      x-ref="customOrderForm"
-      @submit.prevent="
-        fetch($refs.customOrderForm.action, {
-          method: 'POST',
-          body: new FormData($refs.customOrderForm),
-          headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-          }
-        })
-        .then(response => {
-          if(response.ok) {
-            showDialog = false;
-            // Option 1: Reload the page to update the production orders list
-            window.location.reload();
-            // Option 2: If you use AJAX for the production list, trigger a refresh event here instead
-            // $dispatch('refresh-production-orders');
-          }
-        });
-      "
-    >
+    <form method="POST" action="{{ route('order.custom.store') }}">
       @csrf
       
       <div class="space-y-4">
@@ -144,8 +122,7 @@ x-show="showDialog"
           Cancel
         </button>
         <button 
-          type="submit" 
-          @click.stop
+          type="submit"
           class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">
           Save Order
         </button>

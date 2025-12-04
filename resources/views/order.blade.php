@@ -20,7 +20,7 @@
     @php
       $statsData = [
         ['label' => 'Total Semua Pesanan', 'value' => $stats['totalOrders'] ?? 0, 'color' => 'text-gray-600', 'icon' => '📦'],
-        ['label' => 'Pesanan Produksi', 'value' => $stats['productionOrders'] ?? 0, 'color' => 'text-blue-600', 'icon' => '⚙️'],
+        ['label' => 'Pesanan Produksi', 'value' => $stats['productionOrders'] ?? 0, 'color' => 'text-blue-600', 'icon' => '👟'],
         ['label' => 'Pesanan Custom', 'value' => $stats['customOrders'] ?? 0, 'color' => 'text-purple-600', 'icon' => '👟'],
         ['label' => 'Pesanan Aktif', 'value' => $stats['activeOrders'] ?? 0, 'color' => 'text-green-600', 'icon' => '🟢'],
         ['label' => 'Selesai', 'value' => $stats['completed'] ?? 0, 'color' => 'text-gray-600', 'icon' => '✅'],

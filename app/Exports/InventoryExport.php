@@ -40,7 +40,6 @@ class InventoryExport implements FromCollection, WithHeadings, WithStyles, WithC
 
     public function styles(Worksheet $sheet)
     {
-        // Style untuk header
         $sheet->getStyle('A1:F1')->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -62,10 +61,8 @@ class InventoryExport implements FromCollection, WithHeadings, WithStyles, WithC
             ]
         ]);
 
-        // Row height untuk header
         $sheet->getRowDimension(1)->setRowHeight(25);
 
-        // Style untuk data rows
         $lastRow = $sheet->getHighestRow();
         $sheet->getStyle('A2:F' . $lastRow)->applyFromArray([
             'borders' => [
@@ -79,11 +76,8 @@ class InventoryExport implements FromCollection, WithHeadings, WithStyles, WithC
             ]
         ]);
 
-        // Alignment untuk kolom numerik
         $sheet->getStyle('C2:C' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle('E2:E' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // Number format untuk nilai
         $sheet->getStyle('E2:E' . $lastRow)->getNumberFormat()->setFormatCode('#,##0');
 
         return [];
