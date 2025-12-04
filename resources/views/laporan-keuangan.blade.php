@@ -34,7 +34,7 @@ function formatIDR($amount) {
                 </svg>
                 <select 
                     class="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    onchange="window.location.href='{{ route('laporan') }}?filter=' + this.value"
+                    onchange="window.location.href='{{ route('laporan') }}?filter=' + this.value;"
                 >
                     <option value="all" {{ $filter == 'all' ? 'selected' : '' }}>Semua Data</option>
                     <option value="week" {{ $filter == 'week' ? 'selected' : '' }}>Minggu Ini</option>

@@ -2,7 +2,7 @@
 
 @section('content')
 <div x-data="{ 
-  tab: 'production', 
+  tab: 'all', 
   showProductionDialog: false, 
   showCustomDialog: false 
 }" class="space-y-6 p-6">
@@ -19,11 +19,11 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
     @php
       $statsData = [
-        ['label' => 'Total Pesanan', 'value' => 0, 'color' => 'text-gray-600', 'icon' => '📦'],
-        ['label' => 'Pesanan Produksi', 'value' => 0, 'color' => 'text-blue-600', 'icon' => '⚙️'],
-        ['label' => 'Pesanan Custom', 'value' => 0, 'color' => 'text-purple-600', 'icon' => '👟'],
-        ['label' => 'Pesanan Aktif', 'value' => 0, 'color' => 'text-green-600', 'icon' => '🟢'],
-        ['label' => 'Selesai', 'value' => 0, 'color' => 'text-gray-600', 'icon' => '✅'],
+        ['label' => 'Total Semua Pesanan', 'value' => $stats['totalOrders'] ?? 0, 'color' => 'text-gray-600', 'icon' => '📦'],
+        ['label' => 'Pesanan Produksi', 'value' => $stats['productionOrders'] ?? 0, 'color' => 'text-blue-600', 'icon' => '⚙️'],
+        ['label' => 'Pesanan Custom', 'value' => $stats['customOrders'] ?? 0, 'color' => 'text-purple-600', 'icon' => '👟'],
+        ['label' => 'Pesanan Aktif', 'value' => $stats['activeOrders'] ?? 0, 'color' => 'text-green-600', 'icon' => '🟢'],
+        ['label' => 'Selesai', 'value' => $stats['completed'] ?? 0, 'color' => 'text-gray-600', 'icon' => '✅'],
       ];
     @endphp
 
@@ -43,6 +43,12 @@
   <div class="space-y-4">
     <div class="flex border-b">
       <button 
+        @click="tab = 'all'" 
+        :class="tab === 'all' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'" 
+        class="px-4 py-2 font-medium transition">
+        <span class="inline-flex items-center gap-2">📋 Semua Pesanan</span>
+      </button>
+      <button 
         @click="tab = 'production'" 
         :class="tab === 'production' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'" 
         class="px-4 py-2 font-medium transition">
@@ -54,6 +60,11 @@
         class="px-4 py-2 font-medium transition">
         <span class="inline-flex items-center gap-2">👟 Pesanan Custom</span>
       </button>
+    </div>
+
+    {{-- All Orders Tab --}}
+    <div x-show="tab === 'all'" class="space-y-4">
+      @include('partials.all-orders')
     </div>
 
     {{-- Production Tab --}}

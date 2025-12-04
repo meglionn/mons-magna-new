@@ -10,8 +10,9 @@ use App\Models\Transaction;
 use App\Models\Customer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use App\Exports\InventoryExport;
+use App\Exports\SalesExport;
+use App\Exports\FinancialExport;
 
 class LaporanController extends Controller
 {
@@ -50,7 +51,7 @@ class LaporanController extends Controller
             return $this->laporanKeuangan($filter, $startDate, $endDate);
         }
 
-        // SALES DATA - From Orders Table with date filter
+        // SALES DATA
         $ordersQuery = Order::query();
         if ($startDate) {
             $ordersQuery->whereBetween('Tanggal', [$startDate, $endDate]);
@@ -60,7 +61,6 @@ class LaporanController extends Controller
         $totalSales = $ordersQuery->sum('TotalHarga');
         $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
         
-        // Customer Statistics
         $totalCustomers = Customer::count();
         $customersWithOrders = Order::distinct('CustomerID')->count('CustomerID');
         
@@ -73,18 +73,14 @@ class LaporanController extends Controller
             'conversionRate' => $totalCustomers > 0 ? ($customersWithOrders / $totalCustomers) * 100 : 0,
         ];
 
-        // INVENTORY DATA - From Materials Table
+        // INVENTORY DATA
         $materials = Material::all();
         $totalMaterials = $materials->count();
         $totalValue = $materials->sum(function($material) {
             return $material->StokBahan * $material->HargaSatuan;
         });
         
-        // Low stock: items with stock less than MinimumStok
-        // Out of stock: items with stock = 0
-        $lowStockItems = $materials->filter(function($material) {
-            return $material->StokBahan > 0 && $material->StokBahan < $material->MinimumStok;
-        })->count();
+        $lowStockItems = $materials->where('StokBahan', '>', 0)->where('StokBahan', '<', 10)->count();
         $outOfStock = $materials->where('StokBahan', '=', 0)->count();
         
         $inventoryData = [
@@ -94,7 +90,7 @@ class LaporanController extends Controller
             'outOfStock' => $outOfStock,
         ];
 
-        // FINANCIAL DATA - From Transactions Table with date filter
+        // FINANCIAL DATA
         $revenueQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
         $expenseQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
         
@@ -115,12 +111,9 @@ class LaporanController extends Controller
             'profitMargin' => round($profitMargin, 1),
         ];
 
-        // Get materials list with low stock warnings
-        $lowStockMaterials = $materials->filter(function($material) {
-            return $material->StokBahan > 0 && $material->StokBahan < $material->MinimumStok;
-        });
+        $lowStockMaterials = $materials->where('StokBahan', '>', 0)->where('StokBahan', '<', 10);
 
-        // TOP PRODUCTS - From OrderDetails joined with Products and Orders (with date filter)
+        // TOP PRODUCTS
         $topProductsQuery = DB::table('orderdetails')
             ->join('products', 'orderdetails.ProductID', '=', 'products.ProductID')
             ->join('orders', 'orderdetails.OrderID', '=', 'orders.OrderID')
@@ -140,89 +133,6 @@ class LaporanController extends Controller
             ->orderByDesc('total_revenue')
             ->limit(10)
             ->get();
-
-        // EXPENSES BY CATEGORY - From Transactions with date filter
-        $expensesByCategoryQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
-        if ($startDate) {
-            $expensesByCategoryQuery->whereBetween('Tanggal', [$startDate, $endDate]);
-        }
-        $expensesByCategory = $expensesByCategoryQuery
-            ->selectRaw('Kategori, SUM(Jumlah) as total')
-            ->groupBy('Kategori')
-            ->orderByDesc('total')
-            ->get();
-
-        // INCOME BY CATEGORY - From Transactions with date filter
-        $incomeByCategoryQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
-        if ($startDate) {
-            $incomeByCategoryQuery->whereBetween('Tanggal', [$startDate, $endDate]);
-        }
-        $incomeByCategory = $incomeByCategoryQuery
-            ->selectRaw('Kategori, SUM(Jumlah) as total')
-            ->groupBy('Kategori')
-            ->orderByDesc('total')
-            ->get();
-
-        // MONTHLY COMPARISON - Last 6 months
-            $driver = DB::connection()->getDriverName();
-
-            if ($driver === 'sqlite') {
-                $dateExpr = "strftime('%Y-%m', Tanggal)";
-            } else {
-                // For MySQL and others use DATE_FORMAT
-                $dateExpr = "DATE_FORMAT(Tanggal, '%Y-%m')";
-            }
-
-            $monthlyData = Transaction::selectRaw(
-                    "$dateExpr as month,\n                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,\n                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense"
-                )
-                ->groupBy('month')
-                ->orderBy('month', 'desc')
-                ->limit(6)
-                ->get()
-                ->reverse();
-
-        return view('laporan', compact(
-            'salesData',
-            'inventoryData',
-            'financialData',
-            'materials',
-            'lowStockMaterials',
-            'topProducts',
-            'expensesByCategory',
-            'incomeByCategory',
-            'monthlyData',
-            'filter'
-        ));
-    }
-
-    /**
-     * Laporan Keuangan - Only financial data for Keuangan role
-     */
-    public function laporanKeuangan($filter = 'all', $startDate = null, $endDate = null)
-    {
-        if (!$endDate) $endDate = now();
-        
-        // FINANCIAL DATA - From Transactions Table with date filter
-        $revenueQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
-        $expenseQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
-        
-        if ($startDate) {
-            $revenueQuery->whereBetween('Tanggal', [$startDate, $endDate]);
-            $expenseQuery->whereBetween('Tanggal', [$startDate, $endDate]);
-        }
-        
-        $totalRevenue = $revenueQuery->sum('Jumlah');
-        $totalExpenses = $expenseQuery->sum('Jumlah');
-        $netProfit = $totalRevenue - $totalExpenses;
-        $profitMargin = $totalRevenue > 0 ? ($netProfit / $totalRevenue) * 100 : 0;
-        
-        $financialData = [
-            'totalRevenue' => $totalRevenue,
-            'totalExpenses' => $totalExpenses,
-            'netProfit' => $netProfit,
-            'profitMargin' => round($profitMargin, 1),
-        ];
 
         // EXPENSES BY CATEGORY
         $expensesByCategoryQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
@@ -255,7 +165,9 @@ class LaporanController extends Controller
         }
 
         $monthlyData = Transaction::selectRaw(
-                "$dateExpr as month,\n                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,\n                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense"
+                "$dateExpr as month,
+                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,
+                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense"
             )
             ->groupBy('month')
             ->orderBy('month', 'desc')
@@ -263,7 +175,82 @@ class LaporanController extends Controller
             ->get()
             ->reverse();
 
-        // Return view with only financial data
+        return view('laporan', compact(
+            'salesData',
+            'inventoryData',
+            'financialData',
+            'materials',
+            'lowStockMaterials',
+            'topProducts',
+            'expensesByCategory',
+            'incomeByCategory',
+            'monthlyData',
+            'filter'
+        ));
+    }
+
+    public function laporanKeuangan($filter = 'all', $startDate = null, $endDate = null)
+    {
+        if (!$endDate) $endDate = now();
+        
+        $revenueQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
+        $expenseQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
+        
+        if ($startDate) {
+            $revenueQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+            $expenseQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+        }
+        
+        $totalRevenue = $revenueQuery->sum('Jumlah');
+        $totalExpenses = $expenseQuery->sum('Jumlah');
+        $netProfit = $totalRevenue - $totalExpenses;
+        $profitMargin = $totalRevenue > 0 ? ($netProfit / $totalRevenue) * 100 : 0;
+        
+        $financialData = [
+            'totalRevenue' => $totalRevenue,
+            'totalExpenses' => $totalExpenses,
+            'netProfit' => $netProfit,
+            'profitMargin' => round($profitMargin, 1),
+        ];
+
+        $expensesByCategoryQuery = Transaction::where('JenisTransaksi', 'Pengeluaran');
+        if ($startDate) {
+            $expensesByCategoryQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+        }
+        $expensesByCategory = $expensesByCategoryQuery
+            ->selectRaw('Kategori, SUM(Jumlah) as total')
+            ->groupBy('Kategori')
+            ->orderByDesc('total')
+            ->get();
+
+        $incomeByCategoryQuery = Transaction::where('JenisTransaksi', 'Pemasukan');
+        if ($startDate) {
+            $incomeByCategoryQuery->whereBetween('Tanggal', [$startDate, $endDate]);
+        }
+        $incomeByCategory = $incomeByCategoryQuery
+            ->selectRaw('Kategori, SUM(Jumlah) as total')
+            ->groupBy('Kategori')
+            ->orderByDesc('total')
+            ->get();
+
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $dateExpr = "strftime('%Y-%m', Tanggal)";
+        } else {
+            $dateExpr = "DATE_FORMAT(Tanggal, '%Y-%m')";
+        }
+
+        $monthlyData = Transaction::selectRaw(
+                "$dateExpr as month,
+                SUM(CASE WHEN JenisTransaksi = 'Pemasukan' THEN Jumlah ELSE 0 END) as income,
+                SUM(CASE WHEN JenisTransaksi = 'Pengeluaran' THEN Jumlah ELSE 0 END) as expense"
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->limit(6)
+            ->get()
+            ->reverse();
+
         return view('laporan-keuangan', compact(
             'financialData',
             'expensesByCategory',
@@ -276,8 +263,6 @@ class LaporanController extends Controller
     public function exportPDF($type, Request $request)
     {
         $filter = $request->get('filter', 'all');
-        
-        // Get data based on type
         $data = $this->getReportData($type, $filter);
         
         $pdf = Pdf::loadView('exports.laporan-pdf', [
@@ -292,38 +277,22 @@ class LaporanController extends Controller
     public function exportExcel($type, Request $request)
     {
         $filter = $request->get('filter', 'all');
-        
-        // Get data based on type
         $data = $this->getReportData($type, $filter);
         
-        return Excel::download(new class($data, $type) implements FromCollection, WithHeadings {
-            protected $data;
-            protected $type;
-            
-            public function __construct($data, $type) {
-                $this->data = $data;
-                $this->type = $type;
-            }
-            
-            public function collection() {
-                return collect($this->data);
-            }
-            
-            public function headings(): array {
-                if ($this->type == 'inventory') {
-                    return ['Material', 'Kategori', 'Stok', 'Jenis Bahan', 'Nilai (IDR)', 'Status'];
-                } elseif ($this->type == 'sales') {
-                    return ['Produk', 'SKU', 'Jumlah Terjual', 'Pendapatan (IDR)'];
-                } else {
-                    return ['Kategori', 'Total (IDR)', 'Persentase'];
-                }
-            }
-        }, 'laporan-' . $type . '-' . now()->format('Y-m-d') . '.xlsx');
+        $filename = 'laporan-' . $type . '-' . now()->format('Y-m-d') . '.xlsx';
+        
+        // Gunakan class export yang proper
+        if ($type == 'inventory') {
+            return Excel::download(new InventoryExport($data), $filename);
+        } elseif ($type == 'sales') {
+            return Excel::download(new SalesExport($data), $filename);
+        } else { // financial
+            return Excel::download(new FinancialExport($data), $filename);
+        }
     }
 
     private function getReportData($type, $filter)
     {
-        // Calculate date range
         $startDate = null;
         $endDate = now();
         
@@ -345,12 +314,12 @@ class LaporanController extends Controller
         if ($type == 'inventory') {
             return Material::all()->map(function($material) {
                 $value = $material->StokBahan * $material->HargaSatuan;
-                $status = $material->StokBahan == 0 ? 'Habis' : ($material->StokBahan < $material->MinimumStok ? 'Stok Rendah' : 'Sehat');
+                $status = $material->StokBahan == 0 ? 'Habis' : ($material->StokBahan < 10 ? 'Stok Rendah' : 'Sehat');
                 return [
                     $material->NamaBahan,
-                    $material->Kategori,
+                    'MAT-' . str_pad($material->MaterialID, 3, '0', STR_PAD_LEFT),
                     $material->StokBahan,
-                    $material->JenisBahan,
+                    'unit',
                     $value,
                     $status
                 ];

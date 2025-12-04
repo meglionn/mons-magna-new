@@ -22,7 +22,29 @@ x-show="showDialog"
     </div>
 
     {{-- FORM --}}
-    <form method="POST" action="{{ route('order.custom.store') }}">
+    <form 
+      method="POST" 
+      action="{{ route('order.custom.store') }}"
+      x-ref="customOrderForm"
+      @submit.prevent="
+        fetch($refs.customOrderForm.action, {
+          method: 'POST',
+          body: new FormData($refs.customOrderForm),
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          }
+        })
+        .then(response => {
+          if(response.ok) {
+            showDialog = false;
+            // Option 1: Reload the page to update the production orders list
+            window.location.reload();
+            // Option 2: If you use AJAX for the production list, trigger a refresh event here instead
+            // $dispatch('refresh-production-orders');
+          }
+        });
+      "
+    >
       @csrf
       
       <div class="space-y-4">

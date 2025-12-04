@@ -46,6 +46,21 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Ukuran (Size)</label>
+          <input type="text" name="Size" placeholder="42" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Warna (Color)</label>
+          <input type="text" name="Color" placeholder="Black" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Material</label>
+          <input type="text" name="Material" placeholder="Leather" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Tanggal Mulai Produksi *</label>

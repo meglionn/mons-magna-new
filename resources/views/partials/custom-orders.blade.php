@@ -92,7 +92,7 @@
               <td class="px-4 py-2 text-right">
                 <div class="flex justify-end gap-2">
                   <button 
-                    @click="openEditCustomModal({{ $order->OrderID }})"
+                    onclick="openEditCustomModal({{ $order->OrderID }})"
                     class="text-blue-600 hover:text-blue-800 text-lg">
                     ✏️
                   </button>
@@ -116,65 +116,65 @@
     </table>
   </div>
 
-  {{-- Edit Custom Order Modal --}}
-  <div x-data="{ editModal: false, editData: {} }" @open-custom-edit-modal.window="editModal = true; editData = $event.detail" style="display: none;" x-show="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl max-h-96 overflow-y-auto">
-      <h3 class="text-lg font-semibold mb-4">Edit Pesanan Custom</h3>
-      <form :action="'/pesanan/' + editData.id" method="POST">
+  {{-- Edit Custom Order Modal (vanilla JS) --}}
+  <div id="editCustomModal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background: white; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 24px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; margin: 40px auto;">
+      <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Edit Pesanan Custom</h3>
+      <form id="editCustomForm" method="POST">
         @csrf
         @method('PUT')
-        
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Nama Pelanggan</label>
-          <input type="text" name="CustomerName" :value="editData.customerName" class="w-full border border-gray-300 rounded px-3 py-2">
+
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Nama Pelanggan</label>
+          <input type="text" id="editCustomerName" name="CustomerName" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Tanggal</label>
-            <input type="date" name="Tanggal" :value="editData.tanggal" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Tanggal</label>
+            <input type="date" id="editTanggal" name="Tanggal" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Due Date</label>
-            <input type="date" name="TenggalSelesai" :value="editData.tenggalSelesai" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Product Type</label>
-          <input type="text" name="ProductType" :value="editData.productType" class="w-full border border-gray-300 rounded px-3 py-2">
-        </div>
-
-        <div class="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Size</label>
-            <input type="text" name="Size" :value="editData.size" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Color</label>
-            <input type="text" name="Color" :value="editData.color" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Material</label>
-            <input type="text" name="Material" :value="editData.material" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Tenggat Selesai</label>
+            <input type="date" id="editTenggalSelesai" name="TenggalSelesai" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Product Type</label>
+          <input type="text" id="editProductType" name="ProductType" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Total Harga (IDR)</label>
-            <input type="number" name="TotalHarga" :value="editData.totalHarga" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Size</label>
+            <input type="text" id="editSize" name="Size" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Deposit Paid (IDR)</label>
-            <input type="number" name="DepositPaid" :value="editData.depositPaid" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Color</label>
+            <input type="text" id="editColor" name="Color" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Material</label>
+            <input type="text" id="editMaterial" name="Material" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Status</label>
-            <select name="StatusOrder" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Total Harga (IDR)</label>
+            <input type="number" id="editTotalHarga" name="TotalHarga" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+          </div>
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Deposit Paid (IDR)</label>
+            <input type="number" id="editDepositPaid" name="DepositPaid" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div>
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Status</label>
+            <select id="editStatusOrder" name="StatusOrder" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
               <option value="Tertunda">Tertunda</option>
               <option value="Dikonfirmasi">Dikonfirmasi</option>
               <option value="Dalam Produksi">Dalam Produksi</option>
@@ -183,32 +183,32 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Prioritas</label>
-            <select name="Prioritas" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Prioritas</label>
+            <select id="editPrioritas" name="Prioritas" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
               <option value="Normal">Normal</option>
               <option value="Mendesak">Mendesak</option>
             </select>
           </div>
         </div>
 
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Style</label>
-          <input type="text" name="Style" :value="editData.style" class="w-full border border-gray-300 rounded px-3 py-2">
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Style</label>
+          <input type="text" id="editStyle" name="Style" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
         </div>
 
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Custom Features</label>
-          <textarea name="CustomFeatures" :value="editData.customFeatures" class="w-full border border-gray-300 rounded px-3 py-2" rows="2"></textarea>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Custom Features</label>
+          <textarea id="editCustomFeatures" name="CustomFeatures" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; min-height:80px;"></textarea>
         </div>
 
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Special Requirements</label>
-          <textarea name="SpecialRequirements" :value="editData.specialRequirements" class="w-full border border-gray-300 rounded px-3 py-2" rows="2"></textarea>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Special Requirements</label>
+          <textarea id="editSpecialRequirements" name="SpecialRequirements" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; min-height:80px;"></textarea>
         </div>
 
-        <div class="flex gap-2">
-          <button type="button" @click="editModal = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Batal</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Simpan</button>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <button type="button" onclick="closeEditCustomModal()" style="padding:8px 14px; border-radius:6px; background:#e5e7eb;">Batal</button>
+          <button type="submit" style="padding:8px 14px; border-radius:6px; background:#2563eb; color:white;">Simpan</button>
         </div>
       </form>
     </div>
@@ -218,27 +218,40 @@
     function openEditCustomModal(orderId) {
       fetch('/debug/orders').then(r => r.json()).then(orders => {
         const order = orders.find(o => o.OrderID === orderId);
-        if (order && order.customDetail) {
-          const customData = JSON.parse(order.customDetail?.CatatanTambahan || '{}');
-          window.dispatchEvent(new CustomEvent('open-custom-edit-modal', { 
-            detail: { 
-              id: orderId, 
-              customerName: order.customer?.Nama || '',
-              tanggal: order.Tanggal,
-              tenggalSelesai: order.TenggalSelesai || '',
-              productType: order.customDetail?.Model || customData?.ProductType || '',
-              size: order.customDetail?.Ukuran || customData?.Size || '',
-              color: order.customDetail?.Warna || customData?.Color || '',
-              material: order.customDetail?.JenisBahan || customData?.Material || '',
-              style: customData?.Style || '',
-              customFeatures: customData?.CustomFeatures || '',
-              specialRequirements: customData?.SpecialRequirements || '',
-              totalHarga: order.TotalHarga,
-              depositPaid: order.DepositPaid || 0
-            } 
-          }));
-        }
-      });
+        if (!order || !order.customDetail) return;
+
+        const customData = JSON.parse(order.customDetail?.CatatanTambahan || '{}');
+
+        // fill fields
+        document.getElementById('editCustomerName').value = order.customer?.Nama || '';
+        document.getElementById('editTanggal').value = order.Tanggal ? order.Tanggal.split('T')[0] : '';
+        document.getElementById('editTenggalSelesai').value = customData?.TenggalSelesai ? customData.TenggalSelesai.split('T')[0] : '';
+        document.getElementById('editProductType').value = order.customDetail?.Model || customData?.ProductType || '';
+        document.getElementById('editSize').value = order.customDetail?.Ukuran || customData?.Size || '';
+        document.getElementById('editColor').value = order.customDetail?.Warna || customData?.Color || '';
+        document.getElementById('editMaterial').value = order.customDetail?.JenisBahan || customData?.Material || '';
+        document.getElementById('editTotalHarga').value = order.TotalHarga || 0;
+        document.getElementById('editDepositPaid').value = order.DepositPaid || 0;
+        document.getElementById('editStatusOrder').value = order.StatusOrder || 'Tertunda';
+        document.getElementById('editPrioritas').value = order.Prioritas || 'Normal';
+        document.getElementById('editStyle').value = customData?.Style || '';
+        document.getElementById('editCustomFeatures').value = customData?.CustomFeatures || '';
+        document.getElementById('editSpecialRequirements').value = customData?.SpecialRequirements || '';
+
+        const form = document.getElementById('editCustomForm');
+        form.action = '/pesanan/' + orderId;
+
+        document.getElementById('editCustomModal').style.display = 'flex';
+      }).catch(e => console.error(e));
     }
+
+    function closeEditCustomModal() {
+      document.getElementById('editCustomModal').style.display = 'none';
+    }
+
+    // close when clicking outside
+    document.getElementById('editCustomModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeEditCustomModal();
+    });
   </script>
 </div>

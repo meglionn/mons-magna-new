@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use App\Mail\VerifyEmail;
+use App\Models\Order;
+use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
 
 class RegisterController extends Controller
 {
@@ -28,10 +31,10 @@ class RegisterController extends Controller
             'role' => 'required|in:Owner,Admin,Produksi,Keuangan',
         ]);
 
-        // Enforce single Owner
-        if ($data['role'] === 'Owner' && User::where('Role', 'Owner')->exists()) {
-            return back()->withErrors(['role' => 'Sudah ada Owner terdaftar. Hanya satu Owner yang diperbolehkan.'])->withInput();
-        }
+        // Enforce single Owner - TEMPORARILY DISABLED for registration
+        // if ($data['role'] === 'Owner' && User::where('Role', 'Owner')->exists()) {
+        //     return back()->withErrors(['role' => 'Sudah ada Owner terdaftar. Hanya satu Owner yang diperbolehkan.'])->withInput();
+        // }
 
         // Create user using existing DB column names
         $token = Str::random(64);
@@ -65,5 +68,54 @@ class RegisterController extends Controller
         }
 
         return redirect()->route('welcome')->with('success', 'Registrasi berhasil.');
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        // Require password confirmation
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!Hash::check($request->password, $user->Password)) {
+            return back()->withErrors(['password' => 'Password tidak sesuai.']);
+        }
+
+        // Get all customers associated with this user
+        $customers = Customer::where('UserID', $user->UserID)->get();
+        
+        // Delete all orders and related data for each customer
+        foreach ($customers as $customer) {
+            $orders = Order::where('CustomerID', $customer->CustomerID)->get();
+            
+            foreach ($orders as $order) {
+                // Delete order details
+                $order->orderDetails()->delete();
+                
+                // Delete custom details
+                $order->customDetail()->delete();
+                
+                // Delete production records
+                $order->produksi()->delete();
+                
+                // Delete transactions
+                $order->transactions()->delete();
+                
+                // Delete the order itself
+                $order->delete();
+            }
+            
+            // Delete the customer
+            $customer->delete();
+        }
+        
+        // Delete the user account
+        $user->delete();
+        
+        Auth::logout();
+        
+        return redirect()->route('welcome')->with('success', 'Akun Anda telah dihapus secara permanen.');
     }
 }

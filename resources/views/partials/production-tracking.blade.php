@@ -45,8 +45,9 @@
           <th class="px-4 py-2 text-left font-medium text-gray-600">Pelanggan</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Produk</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Jumlah</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-600">Spesifikasi</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-600">Keterangan</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Tahap</th>
-          <th class="px-4 py-2 text-left font-medium text-gray-600">Ditugaskan Ke</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Tenggat</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Prioritas</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Status</th>
@@ -55,7 +56,7 @@
       </thead>
       <tbody class="divide-y divide-gray-200">
         @forelse($orders as $order)
-          @if($order->produksi || !$order->customDetail)
+          @if(!$order->customDetail)
             <tr>
               <td class="px-4 py-2">#{{ $order->OrderID }}</td>
               <td class="px-4 py-2">{{ $order->customer?->Nama ?? 'N/A' }}</td>
@@ -67,14 +68,25 @@
                 @endif
               </td>
               <td class="px-4 py-2">{{ $order->orderDetails->sum('Jumlah') ?: '-' }}</td>
-              <td class="px-4 py-2">{{ $order->StatusOrder ?? '-' }}</td>
+              <td class="px-4 py-2">
+                @if($order->customDetail && $order->customDetail->Ukuran)
+                  {{ $order->customDetail->Ukuran }}
+                @elseif($order->orderDetails->first() && $order->orderDetails->first()->product && $order->orderDetails->first()->product->Ukuran)
+                  {{ $order->orderDetails->first()->product->Ukuran }}
+                @else
+                  -
+                @endif
+              </td>
+              <td class="px-4 py-2">{{ $order->produksi?->first()?->Keterangan ?? '-' }}</td>
               <td class="px-4 py-2">{{ $order->produksi?->first()?->StatusProduksi ?? '-' }}</td>
               <td class="px-4 py-2">{{ $order->produksi?->first()?->TanggalSelesai?->format('d/m/Y') ?? '-' }}</td>
               <td class="px-4 py-2">
-                <span class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-lg">Sedang</span>
+                <span class="px-2 py-1 text-xs @if($order->Prioritas === 'Mendesak' || $order->Prioritas === 'Tinggi') bg-red-100 text-red-700 @elseif($order->Prioritas === 'Sedang') bg-orange-100 text-orange-700 @else bg-green-100 text-green-700 @endif rounded-lg">
+                  {{ $order->Prioritas ?? 'Normal' }}
+                </span>
               </td>
               <td class="px-4 py-2">
-                <span class="px-2 py-1 text-xs @if($order->StatusOrder === 'Proses') bg-blue-100 text-blue-700 @elseif($order->StatusOrder === 'Selesai') bg-green-100 text-green-700 @else bg-gray-100 text-gray-700 @endif rounded-lg">
+                <span class="px-2 py-1 text-xs @if($order->StatusOrder === 'Tertunda' || $order->StatusOrder === 'Pending') bg-yellow-100 text-yellow-700 @elseif($order->StatusOrder === 'Selesai') bg-green-100 text-green-700 @else bg-blue-100 text-blue-700 @endif rounded-lg">
                   {{ $order->StatusOrder }}
                 </span>
               </td>
@@ -96,7 +108,7 @@
           @endif
         @empty
           <tr>
-            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+            <td colspan="11" class="px-4 py-8 text-center text-gray-500">
               Belum ada data pesanan produksi
             </td>
           </tr>
@@ -135,6 +147,21 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Ukuran (Size)</label>
+            <input type="text" name="Size" :value="editData.size || ''" placeholder="42" class="w-full border border-gray-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Warna (Color)</label>
+            <input type="text" name="Color" :value="editData.color || ''" placeholder="Black" class="w-full border border-gray-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Material</label>
+            <input type="text" name="Material" :value="editData.material || ''" placeholder="Leather" class="w-full border border-gray-300 rounded px-3 py-2">
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label class="block text-sm font-medium mb-1">Tanggal Mulai Produksi</label>
@@ -149,7 +176,7 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label class="block text-sm font-medium mb-1">Status Order</label>
-            <select name="StatusOrder" class="w-full border border-gray-300 rounded px-3 py-2">
+            <select name="StatusOrder" :value="editData.statusOrder || editData.StatusOrder || ''" class="w-full border border-gray-300 rounded px-3 py-2">
               <option value="Pending">Pending</option>
               <option value="Proses">Dalam Proses</option>
               <option value="Produksi">Produksi</option>
@@ -159,7 +186,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Status Produksi</label>
-            <select name="StatusProduksi" class="w-full border border-gray-300 rounded px-3 py-2">
+            <select name="StatusProduksi" :value="editData.statusProduksi || editData.StatusProduksi || ''" class="w-full border border-gray-300 rounded px-3 py-2">
               <option value="Pending">Pending</option>
               <option value="Pemotongan Pola">Pemotongan Pola</option>
               <option value="Persiapan Kulit">Persiapan Kulit</option>
@@ -176,7 +203,7 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label class="block text-sm font-medium mb-1">Prioritas</label>
-            <select name="Prioritas" class="w-full border border-gray-300 rounded px-3 py-2">
+            <select name="Prioritas" :value="editData.prioritas || editData.Prioritas || ''" class="w-full border border-gray-300 rounded px-3 py-2">
               <option value="Rendah">Rendah</option>
               <option value="Sedang">Sedang</option>
               <option value="Tinggi">Tinggi</option>
@@ -191,7 +218,7 @@
 
         <div class="mb-4">
           <label class="block text-sm font-medium mb-1">Catatan</label>
-          <textarea name="Keterangan" :value="editData.keterangan" class="w-full border border-gray-300 rounded px-3 py-2" rows="3"></textarea>
+          <textarea name="Keterangan" x-text="editData.keterangan || editData.Keterangan || ''" class="w-full border border-gray-300 rounded px-3 py-2" rows="3"></textarea>
         </div>
 
         <div class="flex gap-2">
@@ -219,7 +246,11 @@
               tanggalMulai: produksi?.TanggalMulai || '',
               tenggalSelesai: produksi?.TanggalSelesai || '',
               jumlah: orderDetail?.Jumlah || 1,
-              keterangan: produksi?.Keterangan || ''
+              keterangan: produksi?.Keterangan || '',
+              statusOrder: order.StatusOrder || '',
+              statusProduksi: produksi?.StatusProduksi || '',
+              prioritas: order.Prioritas || '',
+              size: product?.Ukuran || ''
             } 
           }));
         }

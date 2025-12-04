@@ -21,7 +21,7 @@ class OrderController extends Controller
     
     $stats = [
         'totalOrders' => Order::count(),
-        'productionOrders' => Order::where('StatusOrder', 'Produksi')->count(),
+        'productionOrders' => Order::whereHas('orderDetails')->count(),
         'customOrders' => Order::whereHas('customDetail')->count(),
         'activeOrders' => Order::whereIn('StatusOrder', ['Proses', 'Produksi'])->count(),
         'completed' => Order::where('StatusOrder', 'Selesai')->count(),
@@ -73,6 +73,9 @@ class OrderController extends Controller
             'StatusProduksi' => 'required|string',
             'Prioritas' => 'required|string',
             'Keterangan' => 'nullable|string',
+            'Size' => 'nullable|string',
+            'Color' => 'nullable|string',
+            'Material' => 'nullable|string',
         ]);
 
         // Create Order
@@ -84,17 +87,29 @@ class OrderController extends Controller
             'Alamat' => $request->input('CustomerAlamat'),
         ]);
 
-        // Cari produk, jika belum ada maka buat baru (harga default 0)
+        // Create or update product with specification
+        $productData = [
+            'Harga' => 0,
+            'Ukuran' => $validated['Size'] ?? null,
+        ];
+        
+        // Create product with unique name including specifications if provided
+        $productName = $validated['ProductName'];
+        if ($validated['Color'] || $validated['Material']) {
+            $productName .= ' (' . implode(' / ', array_filter([$validated['Color'], $validated['Material']])) . ')';
+        }
+        
         $product = Product::firstOrCreate(
-            ['NamaProduk' => $validated['ProductName']],
-            ['Harga' => 0]
+            ['NamaProduk' => $productName],
+            $productData
         );
 
         $order = Order::create([
             'CustomerID' => $customer->CustomerID,
             'Tanggal' => $validated['Tanggal'],
             'StatusOrder' => $validated['StatusOrder'],
-            'TotalHarga' => 0, // Will be calculated from order details
+            'TotalHarga' => 0,
+            'Prioritas' => $validated['Prioritas'],
         ]);
 
         // Create Order Detail
@@ -178,6 +193,7 @@ class OrderController extends Controller
         'Size' => $validated['Size'],
         'Color' => $validated['Color'],
         'Material' => $validated['Material'],
+        'TenggalSelesai' => $validated['TenggalSelesai'] ?? null,
         'Style' => $validated['Style'] ?? '',
         'CustomFeatures' => $validated['CustomFeatures'] ?? '',
         'FootLength' => $validated['FootLength'] ?? '',
@@ -230,23 +246,62 @@ class OrderController extends Controller
             'Tanggal' => $validated['Tanggal'] ?? $order->Tanggal,
             'StatusOrder' => $validated['StatusOrder'] ?? $order->StatusOrder,
             'TotalHarga' => $validated['TotalHarga'] ?? $order->TotalHarga,
+            'Prioritas' => $validated['Prioritas'] ?? $order->Prioritas,
         ]);
 
         // Update customer if CustomerName provided
-        if ($validated['CustomerName']) {
+        if (!empty($validated['CustomerName'])) {
             $order->customer->update(['Nama' => $validated['CustomerName']]);
         }
 
         // Update production order details
-        if ($order->orderDetails->first() && $validated['ProductName']) {
+        if ($order->orderDetails->first() && !empty($validated['ProductName'])) {
+            // Build product name with specifications
+            $productName = $validated['ProductName'];
+            $color = $validated['Color'] ?? null;
+            $material = $validated['Material'] ?? null;
+            if ($color || $material) {
+                $productName .= ' (' . implode(' / ', array_filter([$color, $material])) . ')';
+            }
+            
             $product = Product::firstOrCreate(
-                ['NamaProduk' => $validated['ProductName']],
-                ['Harga' => 0]
+                ['NamaProduk' => $productName],
+                ['Harga' => 0, 'Ukuran' => $validated['Size'] ?? null]
             );
+            
+            // If product needs updating (for existing products), update the size
+            if (!empty($validated['Size'])) {
+                $product->update(['Ukuran' => $validated['Size']]);
+            }
+            
             $order->orderDetails->first()->update(['ProductID' => $product->ProductID]);
+        } elseif ($order->orderDetails->first() && (($validated['Size'] ?? null) || ($validated['Color'] ?? null) || ($validated['Material'] ?? null))) {
+            // Update existing product with new specifications
+            $product = $order->orderDetails->first()->product;
+            $updatedData = [];
+            
+            if (!empty($validated['Size'])) {
+                $updatedData['Ukuran'] = $validated['Size'];
+            }
+            $color = $validated['Color'] ?? null;
+            $material = $validated['Material'] ?? null;
+            if ($color || $material) {
+                $productName = $product->NamaProduk;
+                // Remove old spec if it exists
+                if (strpos($productName, '(') !== false) {
+                    $productName = substr($productName, 0, strpos($productName, '('));
+                }
+                $productName = trim($productName);
+                $productName .= ' (' . implode(' / ', array_filter([$color, $material])) . ')';
+                $updatedData['NamaProduk'] = $productName;
+            }
+            
+            if (!empty($updatedData)) {
+                $product->update($updatedData);
+            }
         }
 
-        if ($order->orderDetails->first() && $validated['Jumlah']) {
+        if ($order->orderDetails->first() && !empty($validated['Jumlah'])) {
             $orderDetail = $order->orderDetails->first();
             $orderDetail->update([
                 'Jumlah' => $validated['Jumlah'],
@@ -270,6 +325,7 @@ class OrderController extends Controller
             $customNotes = json_decode($order->customDetail->CatatanTambahan, true) ?? [];
             $customNotes = array_merge($customNotes, [
                 'ProductType' => $validated['ProductType'] ?? ($customNotes['ProductType'] ?? ''),
+                'TenggalSelesai' => $validated['TenggalSelesai'] ?? ($customNotes['TenggalSelesai'] ?? null),
                 'Size' => $validated['Size'] ?? ($customNotes['Size'] ?? ''),
                 'Color' => $validated['Color'] ?? ($customNotes['Color'] ?? ''),
                 'Material' => $validated['Material'] ?? ($customNotes['Material'] ?? ''),

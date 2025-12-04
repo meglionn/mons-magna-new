@@ -19,6 +19,8 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 
 Route::get('/verify-email/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
+Route::delete('/account', [RegisterController::class, 'deleteAccount'])->name('account.delete')->middleware('auth');
+
 // Protected routes with role middleware
 // Orders: viewing allowed for Owner, Admin, Produksi. Creating/updating allowed for Owner, Admin only.
 Route::get('/pesanan', [OrderController::class, 'index'])->name('order')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
@@ -41,15 +43,15 @@ Route::post('/keuangan/income', [FinancialController::class, 'storeIncome'])->na
 Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->name('financial.expense.store')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
 Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
 
-// Laporan: Owner, Admin, Produksi can view general laporan. Exports are allowed for Owner and Keuangan (financial exports)
+// Laporan: Owner, Admin, Produksi can view general laporan. Exports are allowed for Owner and Keuangan
 Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
-Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Keuangan');
-Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Keuangan');
+Route::get('/laporan/export-pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
+Route::get('/laporan/export-excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
 
 // Temporary debug route: returns recent orders with relations as JSON
 Route::get('/debug/orders', function () {
-	return \App\Models\Order::with(['customer', 'orderDetails.product', 'produksi', 'customDetail'])
-		->orderBy('OrderID', 'desc')
-		->take(50)
-		->get();
+return \App\Models\Order::with(['customer', 'orderDetails.product', 'produksi', 'customDetail'])
+->orderBy('OrderID', 'desc')
+->take(50)
+->get();
 });

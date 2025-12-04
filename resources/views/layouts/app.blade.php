@@ -66,12 +66,13 @@
 
         {{-- Show user info and logout --}}
         @if($user)
-          <div class="ml-4 flex items-center">
-            <span class="text-sm text-gray-700 mr-3">{{ $user->NamaLengkap ?? $user->Username }} ({{ $user->Role }})</span>
-            <form method="POST" action="{{ route('logout') }}">
+          <div class="ml-4 flex items-center gap-2">
+            <span class="text-sm text-gray-700">{{ $user->NamaLengkap ?? $user->Username }} ({{ $user->Role }})</span>
+            <form method="POST" action="{{ route('logout') }}" style="display: inline;">
               @csrf
               <button type="submit" class="text-sm text-red-600 hover:underline">Logout</button>
             </form>
+            <button type="button" onclick="openDeleteAccountModal()" class="text-sm text-red-600 hover:underline">Delete Account</button>
           </div>
         @endif
     </div>
@@ -103,5 +104,46 @@
 
     @yield('content')
   </div>
+
+  {{-- Delete Account Modal --}}
+  <div id="deleteAccountModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; flex-items: center; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 32px; border-radius: 12px; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #dc2626;">Hapus Akun</h2>
+      <p style="color: #666; margin-bottom: 16px;">Ini akan menghapus akun Anda secara permanen beserta semua data pesanan dan pelanggan. Tindakan ini tidak dapat dibatalkan.</p>
+      
+      <form id="deleteAccountForm" method="POST" action="{{ route('account.delete') }}">
+        @csrf
+        @method('DELETE')
+        
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #333;">Masukkan Password Anda untuk Konfirmasi:</label>
+          <input type="password" id="deletePassword" name="password" placeholder="Password" required style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" onclick="closeDeleteAccountModal()" style="padding: 8px 16px; background: #e5e7eb; color: #374151; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Batal</button>
+          <button type="submit" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Hapus Akun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openDeleteAccountModal() {
+      document.getElementById('deleteAccountModal').style.display = 'flex';
+    }
+
+    function closeDeleteAccountModal() {
+      document.getElementById('deleteAccountModal').style.display = 'none';
+      document.getElementById('deletePassword').value = '';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDeleteAccountModal();
+      }
+    });
+  </script>
 </body>
 </html>
