@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="{ showMaterialDialog: false, editMode: false }" class="space-y-6">
+<div x-data="inventoryData" class="space-y-6">
 
   {{-- Header --}}
   <div class="flex items-center justify-between">
@@ -97,7 +97,7 @@
           <th class="px-4 py-2 text-right font-medium text-gray-600">Min. Stok</th>
           <th class="px-4 py-2 text-right font-medium text-gray-600">Harga Satuan</th>
           <th class="px-4 py-2 text-left font-medium text-gray-600">Status</th>
-          <th class="px-4 py-2 text-right font-medium text-gray-600">Aksi</th>
+          <th class="px-4 py-2 text-center font-medium text-gray-600">Aksi</th>
         </tr>
       </thead>
       <tbody>
@@ -118,7 +118,9 @@
           </td>
           <td class="px-4 py-2 text-right">
             <div class="flex justify-end gap-2">
-              <button class="text-blue-600 hover:text-blue-800 px-2">✏️</button>
+              <button 
+                @click="openEditModal({{ $material->MaterialID }}, {{ json_encode($material) }})" 
+                class="text-blue-600 hover:text-blue-800 px-2">✏️</button>
               <form action="{{ route('inventorymaterial.destroy', $material->MaterialID) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus?')">
                 @csrf
                 @method('DELETE')
@@ -139,4 +141,87 @@
   </div>
 
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('inventoryData', () => ({
+    showMaterialDialog: false,
+    editMode: false,
+    editingMaterialId: null,
+    formData: {
+      NamaBahan: '',
+      Kategori: '',
+      JenisBahan: '',
+      StokBahan: 0,
+      HargaSatuan: 0,
+      TotalNilaiInventori: 0,
+      MinimumStok: 10,
+      jumlahBeli: 0,
+      hargaBeliTerbaru: 0,
+    },
+    calculatedStock: 0,
+    calculatedPrice: 0,
+    calculatedTotalValue: 0,
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat('id-ID').format(Math.round(value || 0));
+    },
+
+    updateCalculations() {
+      const oldStok = this.formData.StokBahan || 0;
+      const oldTotalValue = this.formData.TotalNilaiInventori || 0;
+      const jumlahBeli = this.formData.jumlahBeli || 0;
+      const hargaBaru = this.formData.hargaBeliTerbaru || 0;
+
+      if (jumlahBeli === 0 || hargaBaru === 0) {
+        this.calculatedStock = oldStok;
+        this.calculatedPrice = this.formData.HargaSatuan;
+        this.calculatedTotalValue = oldTotalValue;
+        return;
+      }
+
+      const nilaiBeliTerbaru = jumlahBeli * hargaBaru;
+      this.calculatedStock = oldStok + jumlahBeli;
+      this.calculatedTotalValue = oldTotalValue + nilaiBeliTerbaru;
+      this.calculatedPrice = this.calculatedStock > 0 ? this.calculatedTotalValue / this.calculatedStock : 0;
+    },
+
+    openEditModal(materialId, materialData) {
+      this.editingMaterialId = materialId;
+      this.editMode = true;
+      this.formData = {
+        NamaBahan: materialData.NamaBahan,
+        Kategori: materialData.Kategori,
+        JenisBahan: materialData.JenisBahan,
+        StokBahan: materialData.StokBahan,
+        HargaSatuan: materialData.HargaSatuan,
+        TotalNilaiInventori: materialData.TotalNilaiInventori || (materialData.StokBahan * materialData.HargaSatuan),
+        MinimumStok: materialData.MinimumStok,
+        jumlahBeli: 0,
+        hargaBeliTerbaru: 0,
+      };
+      this.calculatedStock = materialData.StokBahan;
+      this.calculatedPrice = materialData.HargaSatuan;
+      this.calculatedTotalValue = materialData.TotalNilaiInventori || 0;
+      this.showMaterialDialog = true;
+    },
+
+    handleFormSubmit(e) {
+      const form = e.target;
+      if (this.editMode) {
+        form.action = '{{ route('inventorymaterial.update', ':material') }}'.replace(':material', this.editingMaterialId);
+        form.method = 'POST';
+        
+        // Add hidden method for PUT
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'PUT';
+        form.appendChild(methodInput);
+      }
+      form.submit();
+    }
+  }));
+});
+</script>
 @endsection

@@ -143,6 +143,7 @@
       <form id="editAllOrderForm" method="POST">
         @csrf
         @method('PUT')
+        <input type="hidden" name="StatusOrder" id="editStatusOrderHidden" value="">
         
         {{-- Common Fields --}}
         <div style="margin-bottom: 16px;">
@@ -182,7 +183,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div>
               <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Status Order</label>
-              <select id="editStatusOrder" name="StatusOrder" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+                <select id="editStatusOrder" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
           <option value="Pending">Pending</option>
           <option value="Proses">Dalam Proses</option>
           <option value="Produksi">Produksi</option>
@@ -254,7 +255,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div>
               <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Status</label>
-              <select id="editCustomStatus" name="StatusOrder" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+              <select id="editCustomStatus" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
                 <option value="Tertunda">Tertunda</option>
                 <option value="Dikonfirmasi">Dikonfirmasi</option>
                 <option value="Dalam Produksi">Dalam Produksi</option>
@@ -338,6 +339,10 @@
             document.getElementById('editSpecialRequirements').value = customData?.SpecialRequirements || '';
             document.getElementById('editTenggalSelesai').value = customData?.TenggalSelesai ? customData.TenggalSelesai.split('T')[0] : '';
             document.getElementById('editCustomStatus').value = order.StatusOrder || 'Tertunda';
+            // update hidden status input with visible select value
+            document.getElementById('editStatusOrderHidden').value = document.getElementById('editCustomStatus').value;
+            // ensure changing the select updates hidden input
+            document.getElementById('editCustomStatus').onchange = function() { document.getElementById('editStatusOrderHidden').value = this.value; };
           } else { 
             // Production order
             document.getElementById('productionFields').style.display = 'block';
@@ -353,6 +358,10 @@
             document.getElementById('editJumlah').value = orderDetail?.Jumlah || 1;
             document.getElementById('editKeterangan').value = produksi?.Keterangan || '';
             document.getElementById('editStatusOrder').value = order.StatusOrder || 'Pending';
+            // update hidden status input with visible select value
+            document.getElementById('editStatusOrderHidden').value = document.getElementById('editStatusOrder').value;
+            // ensure changing the select updates hidden input
+            document.getElementById('editStatusOrder').onchange = function() { document.getElementById('editStatusOrderHidden').value = this.value; };
             document.getElementById('editStatusProduksi').value = produksi?.StatusProduksi || 'Pending';
             document.getElementById('editSize').value = product?.Ukuran || '';
             document.getElementById('editColor').value = '';

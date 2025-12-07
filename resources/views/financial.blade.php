@@ -25,10 +25,6 @@
     <div></div>
 
     <div class="flex gap-3">
-      <a href="{{ route('financial.export') }}" class="border rounded-lg px-4 py-2 flex items-center hover:bg-gray-100">
-         Export Laporan
-      </a>
-
       <button 
         class="border rounded-lg px-4 py-2 flex items-center hover:bg-gray-100"
         @click="showExpenseDialog = true"
@@ -113,19 +109,21 @@
 
     {{-- FILTER ROW --}}
     <div class="flex items-center gap-4">
-      <div class="border rounded-lg px-4 py-2 bg-white flex items-center gap-2">
-        <span>🔍</span>
-        <select class="bg-transparent outline-none">
-          <option>Semua Tipe</option>
-        </select>
-      </div>
-
-      <div class="border rounded-lg px-4 py-2 bg-white flex items-center gap-2">
-        <span>📂</span>
-        <select class="bg-transparent outline-none">
-          <option>Semua Kategori</option>
-        </select>
-      </div>
+      <form method="GET" action="" class="flex items-center gap-2">
+        <div class="border rounded-lg px-4 py-2 bg-white flex items-center gap-2">
+          <span>🔍</span>
+          <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari deskripsi/kategori..." class="bg-transparent outline-none" />
+        </div>
+        <div class="border rounded-lg px-4 py-2 bg-white flex items-center gap-2">
+          <span>🔍</span>
+          <select name="type" class="bg-transparent outline-none">
+            <option value="">Semua Tipe</option>
+            <option value="Pemasukan" {{ request('type') == 'Pemasukan' ? 'selected' : '' }}>Pemasukan</option>
+            <option value="Pengeluaran" {{ request('type') == 'Pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
+          </select>
+        </div>
+        <button type="submit" class="ml-2 px-3 py-2 rounded bg-blue-600 text-white">Cari</button>
+      </form>
     </div>
 
     {{-- TRANSACTION TABLE --}}

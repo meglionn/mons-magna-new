@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Transaction;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\OrderDetail;
@@ -284,6 +285,9 @@ class OrderController extends Controller
             'SpecialRequirements' => 'nullable|string',
         ]);
 
+        // Capture previous status to detect transition to 'Selesai'
+        $previousStatus = $order->StatusOrder;
+
         // Update order basic fields
         $order->update([
             'Tanggal' => $validated['Tanggal'] ?? $order->Tanggal,
@@ -396,6 +400,33 @@ class OrderController extends Controller
                 'Warna' => $validated['Color'] ?? $orderDetail->Warna,
                 'JenisBahan' => $validated['Material'] ?? $orderDetail->JenisBahan,
             ]);
+        }
+
+        // If order just moved to 'Selesai' from a different status, create a Pemasukan transaction
+        $newStatus = $order->StatusOrder;
+        if ($newStatus === 'Selesai' && $previousStatus !== 'Selesai') {
+            // Determine amount: prefer TotalHarga, else sum subtotals
+            $amount = $order->TotalHarga ?? $order->orderDetails->sum('Subtotal') ?? 0;
+
+            // Determine payment status based on DepositPaid
+            $deposit = $order->DepositPaid ?? 0;
+            $paymentStatus = ($deposit >= $amount && $amount > 0) ? 'Lunas' : 'Belum Lunas';
+
+            try {
+                Transaction::create([
+                    'OrderID' => $order->OrderID,
+                    'JenisTransaksi' => 'Pemasukan',
+                    'Kategori' => 'Penjualan',
+                    'Jumlah' => $amount,
+                    'Tanggal' => now(),
+                    'MetodePembayaran' => null,
+                    'Status' => $paymentStatus,
+                    'Keterangan' => 'Order #' . $order->OrderID . ' selesai',
+                ]);
+            } catch (\Exception $e) {
+                // Log and continue; do not block order update
+                Log::error('Failed to create transaction for completed order: ' . $order->OrderID, ['error' => $e->getMessage()]);
+            }
         }
 
         return redirect()->route('order')

@@ -36,6 +36,10 @@ Route::post('/inventory', [MaterialController::class, 'store'])->name('inventory
 Route::put('/inventory/{material}', [MaterialController::class, 'update'])->name('inventorymaterial.update')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
 Route::delete('/inventory/{material}', [MaterialController::class, 'destroy'])->name('inventorymaterial.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
 
+// Material purchases (Keuangan + Admin can view/store)
+Route::get('/keuangan/material-purchases', [\App\Http\Controllers\MaterialPurchaseController::class, 'index'])->name('materialpurchase.index')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
+Route::post('/keuangan/material-purchases', [\App\Http\Controllers\MaterialPurchaseController::class, 'store'])->name('materialpurchase.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
+
 // Financial: only Keuangan role may access financial pages
 Route::get('/keuangan', [FinancialController::class, 'index'])->name('financial')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
 Route::get('/keuangan/export', [FinancialController::class, 'export'])->name('financial.export')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');

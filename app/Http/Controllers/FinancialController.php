@@ -10,47 +10,54 @@ class FinancialController extends Controller
     public function index()
     {
         $transactions = Transaction::with('order')->orderBy('Tanggal', 'desc')->get();
-        
+
         $income = Transaction::where('JenisTransaksi', 'Pemasukan')->sum('Jumlah');
         $expenses = Transaction::where('JenisTransaksi', 'Pengeluaran')->sum('Jumlah');
         $netProfit = $income - $expenses;
-        
+
         $stats = [
             'totalIncome' => $income,
             'totalExpenses' => $expenses,
             'netProfit' => $netProfit,
             'profitMargin' => $income > 0 ? ($netProfit / $income) * 100 : 0,
         ];
-        
+
         // Income Analysis
         $incomeByCategory = Transaction::where('JenisTransaksi', 'Pemasukan')
             ->selectRaw('Kategori, SUM(Jumlah) as total, COUNT(*) as count')
             ->groupBy('Kategori')
             ->get();
-            
+
         $incomeByPayment = Transaction::where('JenisTransaksi', 'Pemasukan')
             ->selectRaw('MetodePembayaran, SUM(Jumlah) as total')
             ->groupBy('MetodePembayaran')
             ->get();
-        
+
         // Expense Analysis
         $expensesByCategory = Transaction::where('JenisTransaksi', 'Pengeluaran')
             ->selectRaw('Kategori, SUM(Jumlah) as total, COUNT(*) as count')
             ->groupBy('Kategori')
             ->get();
-            
+
         $expensesByPayment = Transaction::where('JenisTransaksi', 'Pengeluaran')
             ->selectRaw('MetodePembayaran, SUM(Jumlah) as total')
             ->groupBy('MetodePembayaran')
             ->get();
-        
+
+        // Ambil semua kategori unik dari transaksi
+        $categories = Transaction::select('Kategori')
+            ->whereNotNull('Kategori')
+            ->distinct()
+            ->pluck('Kategori');
+
         return view('financial', compact(
             'transactions', 
             'stats', 
             'incomeByCategory', 
             'incomeByPayment',
             'expensesByCategory',
-            'expensesByPayment'
+            'expensesByPayment',
+            'categories'
         ));
     }
 

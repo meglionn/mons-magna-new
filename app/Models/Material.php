@@ -20,6 +20,7 @@ class Material extends Model
         'MinimumStok',
         'HargaSatuan',
         'JenisBahan',
+        'TotalNilaiInventori',
     ];
 
     protected $casts = [
