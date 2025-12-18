@@ -20,7 +20,7 @@ describe('Materials & Inventory Management System', () => {
   
   // Test credentials for different roles
   const credentials = {
-    admin: { email: 'admin@example.com', password: 'password' },
+    admin: { email: 'alifyafazilatun@gmail.com', password: 'afn160506' },
     owner: { email: 'owner@example.com', password: 'password' },
     produksi: { email: 'produksi@example.com', password: 'password' },
     keuangan: { email: 'keuangan@example.com', password: 'password' }
@@ -29,9 +29,11 @@ describe('Materials & Inventory Management System', () => {
   // Helper function to login with a specific role
   const loginAs = (role) => {
     cy.visit(`${baseUrl}/login`);
-    cy.get('input[type="email"]').type(credentials[role].email);
-    cy.get('input[type="password"]').type(credentials[role].password);
-    cy.get('button[type="submit"]').click();
+    // Use ID selectors to avoid matching hidden password inputs (e.g. delete account modal)
+    cy.get('[data-cy="login-email"]').should('be.visible').type(credentials[role].email);
+    cy.get('[data-cy="login-password"]').should('be.visible').type(credentials[role].password);
+    // Click the visible submit button to avoid matching other hidden submit buttons on the page
+    cy.get('[data-cy="login-submit"]').filter(':visible').first().click();
     cy.url().should('not.include', '/login');
   };
 
@@ -43,7 +45,8 @@ describe('Materials & Inventory Management System', () => {
     describe('UC1: See Materials & Inventory Lists', () => {
       it('should display inventory page with materials list', () => {
         cy.visit(`${baseUrl}/inventory`);
-        cy.get('h2').should('contain', 'Inventory');
+        // Page title is localized: assert the specific heading text via data-cy
+        cy.get('[data-cy="inventory-title"]').should('contain.text', 'Inventori Bahan');
         cy.get('table').should('be.visible');
         cy.get('table thead th').should('have.length.greaterThan', 0);
       });
@@ -195,7 +198,7 @@ describe('Materials & Inventory Management System', () => {
     describe('UC7: Check Stock in Production', () => {
       it('should allow Produksi to view inventory', () => {
         cy.visit(`${baseUrl}/inventory`);
-        cy.get('h2').should('contain', 'Inventory');
+        cy.get('[data-cy="inventory-title"]').should('contain.text', 'Inventori Bahan');
       });
 
       it('should display stock levels for production planning', () => {
@@ -253,11 +256,10 @@ describe('Materials & Inventory Management System', () => {
 
       it('should not allow Keuangan to modify inventory', () => {
         cy.visit(`${baseUrl}/inventory`);
-        // Should either be redirected or see view-only mode
-        cy.url().then((url) => {
-          // Either redirected or in view-only mode
-          expect(['/inventory', '/login'].some(path => url.includes(path))).to.be.true;
-        });
+        // Should see the inventory page but not modification controls
+        cy.get('[data-cy="inventory-title"]').should('be.visible');
+        cy.get('button:contains("Tambah")').should('not.exist');
+        cy.get('button:contains("Edit")').should('not.exist');
       });
     });
   });
@@ -282,11 +284,15 @@ describe('Materials & Inventory Management System', () => {
       cy.get('button:contains("Tambah")').should('not.exist');
     });
 
-    it('Keuangan should not access inventory', () => {
+    it('Keuangan should have view-only access to inventory (no modify buttons)', () => {
       loginAs('keuangan');
       cy.visit(`${baseUrl}/inventory`);
-      // Should be redirected to login or dashboard
-      cy.url().should('not.include', '/inventory');
+      // Page should load and show title
+      cy.get('[data-cy="inventory-title"]').should('be.visible');
+      // Keuangan should not see add/edit/delete buttons
+      cy.get('button:contains("Tambah")').should('not.exist');
+      cy.get('button:contains("Edit")').should('not.exist');
+      cy.get('button:contains("Hapus")').should('not.exist');
     });
   });
 

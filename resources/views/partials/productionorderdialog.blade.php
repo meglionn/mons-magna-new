@@ -31,7 +31,12 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Nama Produk *</label>
-          <input type="text" name="ProductName" required placeholder="Nama produk" class="w-full border rounded-lg p-2" />
+          <select name="NamaProduk" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+            <option value="Kalla Baiq">Kalla Baiq</option>
+            <option value="Lana Lale" selected>Lana Lale</option>
+            <option value="Orlin Sesak">Orlin Sesak</option>
+            <option value="Remo Lalu">Remo Lalu</option>
+          </select>
         </div>
       </div>
 
@@ -46,25 +51,25 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-4">
+      <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Total Harga (IDR) *</label>
           <input type="number" name="TotalHarga" required min="0" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" placeholder="1200000">
         </div>
-      </div>
-
-      <div class="grid grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Ukuran (Size)</label>
-          <input type="text" name="Size" placeholder="42" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Warna (Color)</label>
-          <input type="text" name="Color" placeholder="Black" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Material</label>
-          <input type="text" name="Material" placeholder="Leather" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm font-medium mb-1">Ukuran *</label>
+          <select name="Ukuran" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+            <option value="36">36</option>
+            <option value="37" selected>37</option>
+            <option value="38">38</option>
+            <option value="39">39</option>
+            <option value="40">40</option>
+            <option value="41">41</option>
+            <option value="42">42</option>
+            <option value="43">43</option>
+            <option value="44">44</option>
+            <option value="45">45</option>
+          </select>
         </div>
       </div>
 

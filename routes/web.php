@@ -9,51 +9,85 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\MaterialPurchaseController;
 
 // Public routes
 Route::view('/', 'welcome')->name('welcome');
-Route::view('/login', 'login')->name('login');
+Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::get('/register', [RegisterController::class, 'show'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
-Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 
+// Email verification
 Route::get('/verify-email/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
-Route::delete('/account', [RegisterController::class, 'deleteAccount'])->name('account.delete')->middleware('auth');
 
-// Protected routes with role middleware
-// Orders: viewing allowed for Owner, Admin, Produksi. Creating/updating allowed for Owner, Admin only.
-Route::get('/pesanan', [OrderController::class, 'index'])->name('order')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
-Route::post('/pesanan', [OrderController::class, 'store'])->name('order.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
-Route::post('/pesanan/production', [OrderController::class, 'storeProduction'])->name('order.production.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
-Route::post('/pesanan/custom', [OrderController::class, 'storeCustom'])->name('order.custom.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
-Route::put('/pesanan/{order}', [OrderController::class, 'update'])->name('order.update')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
-Route::delete('/pesanan/{order}', [OrderController::class, 'destroy'])->name('order.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin');
+// Protected routes requiring authentication
+Route::middleware('auth')->group(function () {
+    // Logout
+    Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
+    Route::delete('/account', [RegisterController::class, 'deleteAccount'])->name('account.delete');
 
-// Inventory: Admin and Produksi can view; only Admin can modify
-Route::get('/inventory', [MaterialController::class, 'index'])->name('inventorymaterial')->middleware(\App\Http\Middleware\CheckRole::class.':Admin,Produksi');
-Route::post('/inventory', [MaterialController::class, 'store'])->name('inventorymaterial.store')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
-Route::put('/inventory/{material}', [MaterialController::class, 'update'])->name('inventorymaterial.update')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
-Route::delete('/inventory/{material}', [MaterialController::class, 'destroy'])->name('inventorymaterial.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Admin');
+    // Orders: Owner, Admin, Produksi
+    Route::middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi')->group(function () {
+        Route::get('/pesanan', [OrderController::class, 'index'])->name('order');
+        
+        // Only Owner and Admin can create/update/delete
+        Route::middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin')->group(function () {
+            Route::post('/pesanan', [OrderController::class, 'store'])->name('order.store');
+            Route::post('/pesanan/production', [OrderController::class, 'storeProduction'])->name('order.production.store');
+            Route::post('/pesanan/custom', [OrderController::class, 'storeCustom'])->name('order.custom.store');
+            Route::put('/pesanan/{order}', [OrderController::class, 'update'])->name('order.update');
+            Route::delete('/pesanan/{order}', [OrderController::class, 'destroy'])->name('order.destroy');
+        });
+    });
 
-// Material purchases (Keuangan + Admin can view/store)
-Route::get('/keuangan/material-purchases', [\App\Http\Controllers\MaterialPurchaseController::class, 'index'])->name('materialpurchase.index')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
-Route::post('/keuangan/material-purchases', [\App\Http\Controllers\MaterialPurchaseController::class, 'store'])->name('materialpurchase.store')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan');
+    // Inventory: Admin and Produksi
+    Route::middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi')->group(function () {
+        Route::get('/inventory', [MaterialController::class, 'index'])->name('inventorymaterial');
+        
+        // Only Owner and Produksi can modify
+        Route::middleware(\App\Http\Middleware\CheckRole::class.':Owner,Produksi')->group(function () {
+            Route::post('/inventory', [MaterialController::class, 'store'])->name('inventorymaterial.store');
+            Route::put('/inventory/{material}', [MaterialController::class, 'update'])->name('inventorymaterial.update');
+            Route::delete('/inventory/{material}', [MaterialController::class, 'destroy'])->name('inventorymaterial.destroy');
+        });
+    });
 
-// Financial: only Keuangan role may access financial pages
-Route::get('/keuangan', [FinancialController::class, 'index'])->name('financial')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
-Route::get('/keuangan/export', [FinancialController::class, 'export'])->name('financial.export')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
-Route::post('/keuangan/income', [FinancialController::class, 'storeIncome'])->name('financial.income.store')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
-Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->name('financial.expense.store')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
-Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy')->middleware(\App\Http\Middleware\CheckRole::class.':Keuangan');
+    // Financial: Keuangan, Owner, Admin
+    Route::middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Keuangan')->group(function () {
+        Route::get('/keuangan', [FinancialController::class, 'index'])->name('financial');
+        Route::get('/keuangan/export', [FinancialController::class, 'export'])->name('financial.export');
+        Route::post('/keuangan/income', [FinancialController::class, 'storeIncome'])->name('financial.income.store');
+        Route::post('/keuangan/expense', [FinancialController::class, 'storeExpense'])->name('financial.expense.store');
+        Route::delete('/keuangan/{transaction}', [FinancialController::class, 'destroy'])->name('financial.destroy');
+        
+        // Material purchases
+        Route::get('/keuangan/material-purchases', [MaterialPurchaseController::class, 'index'])->name('materialpurchase.index');
+        Route::post('/keuangan/material-purchases', [MaterialPurchaseController::class, 'store'])->name('materialpurchase.store');
+    });
 
-// Laporan: Owner, Admin, Produksi can view general laporan. Exports are allowed for Owner and Keuangan
-Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan')->middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi');
-
-// Temporary debug route: returns recent orders with relations as JSON
-Route::get('/debug/orders', function () {
-return \App\Models\Order::with(['customer', 'orderDetails.product', 'produksi', 'customDetail'])
-->orderBy('OrderID', 'desc')
-->take(50)
-->get();
+    // Reports: Owner, Admin, Produksi, Keuangan (semua role bisa akses laporan)
+    Route::middleware(\App\Http\Middleware\CheckRole::class.':Owner,Admin,Produksi,Keuangan')->group(function () {
+        Route::get('/laporan', [LaporanController::class, 'laporan'])->name('laporan');
+        
+        // Export routes for reports
+        Route::get('/laporan/export/pdf/{type}', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf');
+        Route::get('/laporan/export/excel/{type}', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
+    });
 });
+
+// Debug route (hapus di production)
+Route::get('/debug/orders', function () {
+    return \App\Models\Order::with(['customer', 'orderDetails.product', 'produksi', 'customDetail'])
+        ->orderBy('OrderID', 'desc')
+        ->take(50)
+        ->get();
+});
+
+// Debug route untuk cek user saat ini
+Route::get('/debug/user', function () {
+    return [
+        'authenticated' => auth()->check(),
+        'user' => auth()->user(),
+    ];
+})->middleware('auth');

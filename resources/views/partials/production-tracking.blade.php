@@ -155,7 +155,18 @@
         <div class="grid grid-cols-3 gap-4 mb-4">
           <div>
             <label class="block text-sm font-medium mb-1">Ukuran (Size)</label>
-            <input type="text" name="Size" :value="editData.size || ''" placeholder="42" class="w-full border border-gray-300 rounded px-3 py-2">
+            <select type="text" name="Size" :value="editData.size || ''" placeholder="42" class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="36">36</option>
+            <option value="37" selected>37</option>
+            <option value="38">38</option>
+            <option value="39">39</option>
+            <option value="40">40</option>
+            <option value="41">41</option>
+            <option value="42">42</option>
+            <option value="43">43</option>
+            <option value="44">44</option>
+            <option value="45">45</option>
+            </select>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Warna (Color)</label>

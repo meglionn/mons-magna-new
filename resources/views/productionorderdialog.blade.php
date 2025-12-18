@@ -34,16 +34,21 @@
             @endforeach
           </select>
         </div>
-        <div>
+        <div x-data="{ productId: '', newProduct: false }">
           <label class="block text-sm font-medium mb-1">Produk *</label>
-          <select name="ProductID" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          <select name="ProductID" x-model="productId" @change="newProduct = productId === '__new'" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
             <option value="">Pilih produk</option>
             @foreach($products as $product)
               <option value="{{ $product->ProductID }}">{{ $product->NamaProduk }} - IDR {{ number_format($product->Harga) }}</option>
             @endforeach
+            <option value="__new">+ Tambah produk baru...</option>
           </select>
+
+          <input x-show="newProduct" x-cloak x-bind:required="newProduct" type="text" name="ProductName" placeholder="Nama produk baru" class="mt-2 w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
+      
+
 
       <div class="grid grid-cols-2 gap-4">
         <div>

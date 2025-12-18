@@ -30,21 +30,23 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Email atau password salah'])->withInput();
         }
 
-        // Log the user in using the user instance
+        // PENTING: Log the user in menggunakan Auth facade
         Auth::login($user);
+        
+        // Regenerate session untuk keamanan
+        $request->session()->regenerate();
 
         // Redirect based on user role
-        if ($user->Role === 'Keuangan') {
-            return redirect()->intended(route('financial'));
-        } elseif ($user->Role === 'Produksi') {
-            return redirect()->intended(route('order'));
-        } elseif ($user->Role === 'Admin') {
-            return redirect()->intended(route('order'));
-        } elseif ($user->Role === 'Owner') {
-            return redirect()->intended(route('order'));
+        switch ($user->Role) {
+            case 'Keuangan':
+                return redirect()->route('financial');
+            case 'Produksi':
+                return redirect()->route('order');
+            case 'Admin':
+            case 'Owner':
+                return redirect()->route('order');
+            default:
+                return redirect()->route('order');
         }
-
-        // Default fallback
-        return redirect()->intended(route('order'));
     }
 }

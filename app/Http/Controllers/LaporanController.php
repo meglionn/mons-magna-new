@@ -46,10 +46,7 @@ class LaporanController extends Controller
                 break;
         }
 
-        // If user is Keuangan, show only financial data
-        if ($user && $user->Role === 'Keuangan') {
-            return $this->laporanKeuangan($filter, $startDate, $endDate);
-        }
+        // All roles can access the full laporan
 
         // SALES DATA
         $ordersQuery = Order::query();
@@ -298,7 +295,7 @@ class LaporanController extends Controller
         $tableHeaders = ['Kategori', 'Total (IDR)', 'Persentase'];
     }
     
-    // Generate HTML
+
     $html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
     $html .= '<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>';
     $html .= '<body>';

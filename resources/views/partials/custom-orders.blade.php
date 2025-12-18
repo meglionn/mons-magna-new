@@ -171,7 +171,8 @@
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <!-- Total Harga editing removed -->
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Total Harga (IDR)</label>
+            <input type="number" id="editTotalHarga" name="TotalHarga" step="1" min="0" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
           <div>
             <label style="display:block; font-weight:600; margin-bottom:6px;">Deposit Paid (IDR)</label>
@@ -247,7 +248,8 @@
       document.getElementById('editColor').value = note.Color ?? custom.Warna ?? "";
       document.getElementById('editMaterial').value = note.Material ?? custom.JenisBahan ?? "";
 
-      // TotalHarga editing removed
+      // Populate total price and deposit
+      document.getElementById('editTotalHarga').value = order.TotalHarga ?? 0;
       document.getElementById('editDepositPaid').value = order.DepositPaid ?? 0;
 
       document.getElementById('editStatusOrder').value = order.StatusOrder ?? "Tertunda";

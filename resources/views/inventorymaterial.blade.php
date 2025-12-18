@@ -6,7 +6,7 @@
   {{-- Header --}}
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-2xl font-semibold">Inventori Bahan</h2>
+      <h2 class="text-2xl font-semibold" data-cy="inventory-title">Inventori Bahan</h2>
       <p class="text-gray-600 text-sm">Kelola bahan baku untuk produksi sepatu</p>
     </div>
 
@@ -168,10 +168,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     updateCalculations() {
-      const oldStok = this.formData.StokBahan || 0;
-      const oldTotalValue = this.formData.TotalNilaiInventori || 0;
-      const jumlahBeli = this.formData.jumlahBeli || 0;
-      const hargaBaru = this.formData.hargaBeliTerbaru || 0;
+      const oldStok = Number(this.formData.StokBahan) || 0;
+      // ensure we treat TotalNilaiInventori as a number (in case it's a formatted string)
+      const oldTotalValue = Number(String(this.formData.TotalNilaiInventori).replace(/[^0-9.-]+/g, '')) || 0;
+      const jumlahBeli = Number(this.formData.jumlahBeli) || 0;
+      const hargaBaru = Number(this.formData.hargaBeliTerbaru) || 0;
 
       if (jumlahBeli === 0 || hargaBaru === 0) {
         this.calculatedStock = oldStok;
@@ -182,8 +183,10 @@ document.addEventListener('alpine:init', () => {
 
       const nilaiBeliTerbaru = jumlahBeli * hargaBaru;
       this.calculatedStock = oldStok + jumlahBeli;
+      // new total value is old total value plus newly purchased value
       this.calculatedTotalValue = oldTotalValue + nilaiBeliTerbaru;
-      this.calculatedPrice = this.calculatedStock > 0 ? this.calculatedTotalValue / this.calculatedStock : 0;
+      // average price MUST be new total value divided by new total stock
+      this.calculatedPrice = this.calculatedStock > 0 ? (this.calculatedTotalValue / this.calculatedStock) : 0;
     },
 
     openEditModal(materialId, materialData) {
@@ -200,9 +203,11 @@ document.addEventListener('alpine:init', () => {
         jumlahBeli: 0,
         hargaBeliTerbaru: 0,
       };
-      this.calculatedStock = materialData.StokBahan;
-      this.calculatedPrice = materialData.HargaSatuan;
-      this.calculatedTotalValue = materialData.TotalNilaiInventori || 0;
+      this.calculatedStock = Number(materialData.StokBahan) || 0;
+      this.calculatedPrice = Number(materialData.HargaSatuan) || 0;
+      // ensure TotalNilaiInventori is numeric; fallback to stock * unit price
+      const rawTotal = materialData.TotalNilaiInventori;
+      this.calculatedTotalValue = (typeof rawTotal === 'number' && !isNaN(rawTotal)) ? rawTotal : (this.calculatedStock * this.calculatedPrice);
       this.showMaterialDialog = true;
     },
 

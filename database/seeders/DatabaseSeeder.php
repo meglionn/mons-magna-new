@@ -67,6 +67,39 @@ class DatabaseSeeder extends Seeder
             'Harga' => 1200000
         ]);
 
+        // New signature products
+        Product::create([
+            'NamaProduk' => 'Kalla Baiq',
+            'JenisProduk' => 'Signature',
+            'Model' => 'Oxford',
+            'Ukuran' => 42,
+            'Harga' => 1350000
+        ]);
+
+        Product::create([
+            'NamaProduk' => 'Lana Lale',
+            'JenisProduk' => 'Signature',
+            'Model' => 'Loafer',
+            'Ukuran' => 42,
+            'Harga' => 1250000
+        ]);
+
+        Product::create([
+            'NamaProduk' => 'Orlin Sesak',
+            'JenisProduk' => 'Signature',
+            'Model' => 'Derby',
+            'Ukuran' => 42,
+            'Harga' => 1400000
+        ]);
+
+        Product::create([
+            'NamaProduk' => 'Remo Lalu',
+            'JenisProduk' => 'Signature',
+            'Model' => 'Monk Strap',
+            'Ukuran' => 42,
+            'Harga' => 1280000
+        ]);
+
         // Seed Production Order
         $order1 = Order::create([
             'CustomerID' => $customer1->CustomerID,
