@@ -33,7 +33,7 @@
           <label class="block text-sm font-medium mb-1">Nama Produk *</label>
           <select name="NamaProduk" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
             <option value="Kalla Baiq">Kalla Baiq</option>
-            <option value="Lana Lale" selected>Lana Lale</option>
+            <option value="Lana Lale" >Lana Lale</option>
             <option value="Orlin Sesak">Orlin Sesak</option>
             <option value="Remo Lalu">Remo Lalu</option>
           </select>

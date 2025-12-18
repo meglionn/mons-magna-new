@@ -21,7 +21,7 @@
     </div>
 
     {{-- Form --}}
-    <form method="POST" action="{{ route('order.production.store') }}" class="grid gap-4">
+    <form method="POST" action="{{ route('order.production.store') }}" class="grid gap-4" onsubmit="if (document.querySelector('[name=ProductID]').value === '__new' && (!document.querySelector('[name=ProductName]') || document.querySelector('[name=ProductName]').value.trim() === '')) { alert('Isi nama produk baru jika memilih Tambah produk baru.'); return false; } return true;">
       @csrf
       
       <div class="grid grid-cols-2 gap-4">
@@ -34,13 +34,20 @@
             @endforeach
           </select>
         </div>
+        <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nama Pelanggan</label>
+          <input type="text" name="CustomerName" placeholder="Nama pelanggan" class="w-full border rounded-lg p-2" />
+        </div>
         <div x-data="{ productId: '', newProduct: false }">
           <label class="block text-sm font-medium mb-1">Produk *</label>
-          <select name="ProductID" x-model="productId" @change="newProduct = productId === '__new'" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          <select name="ProductID" x-model="productId" @change="newProduct = productId === '__new'" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
             <option value="">Pilih produk</option>
-            @foreach($products as $product)
-              <option value="{{ $product->ProductID }}">{{ $product->NamaProduk }} - IDR {{ number_format($product->Harga) }}</option>
-            @endforeach
+            @if(isset($products))
+              @foreach($products as $product)
+                <option value="{{ $product->ProductID }}">{{ $product->NamaProduk }} - IDR {{ number_format($product->Harga) }}</option>
+              @endforeach
+            @endif
             <option value="__new">+ Tambah produk baru...</option>
           </select>
 
@@ -48,8 +55,6 @@
         </div>
       </div>
       
-
-
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Tanggal Pesanan *</label>

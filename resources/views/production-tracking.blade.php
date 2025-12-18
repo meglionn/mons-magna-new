@@ -6,7 +6,6 @@
       <p class="text-gray-600">Pantau dan kelola pesanan produksi sepatu</p>
     </div>
     
-    {{-- Tombol buka modal - FIXED: menggunakan parent scope --}}
     <button 
       @click="$parent.showProductionDialog = true"
       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">

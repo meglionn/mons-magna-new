@@ -58,10 +58,13 @@ class OrderController extends Controller
     public function storeProduction(Request $request)
     {
         Log::debug('storeProduction input', $request->all());
-        // Allow ProductID to be nullable (we'll validate existence later)
+        
+        // Validation: allow selecting existing customer by ID or entering a new customer name
         $validated = $request->validate([
             'CustomerID' => 'nullable|exists:customers,CustomerID',
+            'CustomerName' => 'nullable|string|max:255',
             'ProductID' => 'nullable',
+            'NamaProduk' => 'nullable|string|max:255', // accept legacy field
             'ProductName' => 'nullable|string|max:255',
             'Tanggal' => 'required|date',
             'TanggalMulai' => 'required|date',
@@ -71,49 +74,82 @@ class OrderController extends Controller
             'StatusProduksi' => 'required|string',
             'Prioritas' => 'required|string',
             'Keterangan' => 'nullable|string',
+            'Ukuran' => 'nullable|string|max:50',
         ]);
 
-        // If ProductID is provided and is not the special '__new' token, ensure it exists
-        $productId = $validated['ProductID'] ?? null;
-        if ($productId && $productId !== '__new') {
-            $product = Product::find($productId);
-            if (!$product) {
-                return back()->withErrors(['Product' => 'Produk yang dipilih tidak ditemukan'])->withInput();
+        // Determine customer: prefer CustomerID, fallback to CustomerName
+        if (!empty($validated['CustomerID'])) {
+            $customer = Customer::find($validated['CustomerID']);
+            if (!$customer) {
+                return back()->withErrors(['CustomerID' => 'Pelanggan tidak ditemukan'])->withInput();
             }
+        } elseif (!empty($validated['CustomerName'])) {
+            $customer = Customer::firstOrCreate(
+                ['Nama' => $validated['CustomerName']],
+                ['Email' => null, 'NoTelp' => null, 'Alamat' => null]
+            );
+        } else {
+            return back()->withErrors(['Customer' => 'Pilih pelanggan atau isi nama pelanggan'])->withInput();
         }
 
-        // Require either existing ProductID (or '__new') or new ProductName
-        if ((empty($productId) || $productId === '__new') && empty($validated['ProductName'])) {
-            return back()->withErrors(['Product' => 'Pilih produk atau tambahkan nama produk baru'])->withInput();
+        // Handle product
+        $productId = $validated['ProductID'] ?? null;
+
+        // Legacy: client may send NamaProduk (name) instead of ProductID — try to resolve
+        if (empty($productId) && !empty($validated['NamaProduk'])) {
+            $found = Product::where('NamaProduk', $validated['NamaProduk'])->first();
+            if ($found) {
+                $productId = $found->ProductID;
+                Log::debug('storeProduction: resolved NamaProduk to ProductID', ['NamaProduk' => $validated['NamaProduk'], 'ProductID' => $productId]);
+            } else {
+                // If NamaProduk present but not found, move value into ProductName to create
+                $validated['ProductName'] = $validated['NamaProduk'];
+            }
+        }
+        
+        // If ProductID is '__new' or empty, create new product
+        if ($productId === '__new' || empty($productId)) {
+            if (empty($validated['ProductName'])) {
+                Log::warning('storeProduction: missing ProductName', ['productId' => $productId, 'request' => $request->all()]);
+                return back()->withErrors(['ProductName' => 'Nama produk baru harus diisi (productId=' . ($productId ?? 'null') . ')'])->withInput();
+            }
+            
+            $product = Product::create([
+                'NamaProduk' => $validated['ProductName'],
+                'JenisProduk' => null,
+                'Model' => 'Standard',
+                'Ukuran' => $validated['Ukuran'] ?? 42,
+                'Harga' => 0,
+            ]);
+            $productId = $product->ProductID;
+        } else {
+            // Verify product exists
+            $product = Product::find($productId);
+            if (!$product) {
+                Log::warning('storeProduction: productId provided but not found', ['productId' => $productId, 'request' => $request->all()]);
+                return back()->withErrors(['ProductID' => 'Produk tidak ditemukan (productId=' . ($productId ?? 'null') . ')'])->withInput();
+            }
         }
 
         DB::beginTransaction();
         try {
             // Create order
             $order = Order::create([
-                'CustomerID' => $validated['CustomerID'] ?? null,
+                'CustomerID' => $customer->CustomerID,
                 'Tanggal' => $validated['Tanggal'],
                 'StatusOrder' => $validated['StatusOrder'],
                 'Prioritas' => $validated['Prioritas'] ?? 'Sedang',
                 'TotalHarga' => 0,
             ]);
 
-            // If ProductID is '__new' or absent, create product from ProductName
-            if (($productId === '__new' || !$productId) && !empty($validated['ProductName'])) {
-                $product = Product::create([
-                    'NamaProduk' => $validated['ProductName'],
-                    'Harga' => 0,
-                ]);
-                $productId = $product->ProductID;
-            }
-
-            // Create order detail (basic)
+            // Create order detail
             OrderDetail::create([
                 'OrderID' => $order->OrderID,
                 'ProductID' => $productId,
                 'Jumlah' => $validated['Jumlah'],
-                'HargaSatuan' => 0,
-                'Subtotal' => 0,
+                'HargaSatuan' => $product->Harga ?? 0,
+                'Subtotal' => ($product->Harga ?? 0) * $validated['Jumlah'],
+                'Ukuran' => $validated['Ukuran'] ?? null,
             ]);
 
             // Create produksi record
@@ -129,6 +165,7 @@ class OrderController extends Controller
             return redirect()->route('order')->with('success', 'Pesanan produksi berhasil dibuat');
         } catch (\Exception $ex) {
             DB::rollBack();
+            Log::error('Production order creation failed', ['error' => $ex->getMessage(), 'trace' => $ex->getTraceAsString()]);
             return back()->withErrors(['error' => 'Gagal menyimpan pesanan: ' . $ex->getMessage()])->withInput();
         }
     }
