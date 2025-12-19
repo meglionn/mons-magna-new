@@ -132,58 +132,56 @@
         @csrf
         @method('PUT')
 
-
         <div style="margin-bottom: 12px;">
-          <label style="display:block; font-weight:600; margin-bottom:6px;">Nama Pelanggan</label>
-          <input type="text" id="editCustomerName" name="CustomerName" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Nama Pelanggan *</label>
+          <input type="text" id="editCustomerName" name="CustomerName" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Tanggal</label>
-            <input type="date" id="editTanggal" name="Tanggal" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Tanggal *</label>
+            <input type="date" id="editTanggal" name="Tanggal" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Tenggat Selesai</label>
-            <input type="date" id="editTenggalSelesai" name="TenggalSelesai" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Due Date *</label>
+            <input type="date" id="editTenggalSelesai" name="TenggalSelesai" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
         </div>
 
         <div style="margin-bottom:12px;">
-          <label style="display:block; font-weight:600; margin-bottom:6px;">Product Type</label>
-          <input type="text" id="editProductType" name="ProductType" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Product Type *</label>
+          <input type="text" id="editProductType" name="ProductType" required placeholder="Custom Leather Shoes" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Size</label>
-            <input type="text" id="editSize" name="Size" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Size *</label>
+            <input type="text" id="editSize" name="Size" required placeholder="42" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Color</label>
-            <input type="text" id="editColor" name="Color" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Color *</label>
+            <input type="text" id="editColor" name="Color" required placeholder="Black" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Material</label>
-            <input type="text" id="editMaterial" name="Material" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Material *</label>
+            <input type="text" id="editMaterial" name="Material" required placeholder="Leather" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
           </div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Total Harga (IDR) *</label>
+          <input type="number" id="editTotalHarga" name="TotalHarga" required min="0" placeholder="1200000" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:6px;">Deposit Paid (IDR)</label>
+          <input type="number" id="editDepositPaid" name="DepositPaid" min="0" placeholder="600000" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Total Harga (IDR)</label>
-            <input type="number" id="editTotalHarga" name="TotalHarga" step="1" min="0" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-          </div>
-          <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Deposit Paid (IDR)</label>
-            <input type="number" id="editDepositPaid" name="DepositPaid" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Status</label>
-            <select id="editStatusOrder" name="StatusOrder" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Status *</label>
+            <select id="editStatusOrder" name="StatusOrder" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
               <option value="Tertunda">Tertunda</option>
               <option value="Dikonfirmasi">Dikonfirmasi</option>
               <option value="Dalam Produksi">Dalam Produksi</option>
@@ -192,8 +190,8 @@
             </select>
           </div>
           <div>
-            <label style="display:block; font-weight:600; margin-bottom:6px;">Prioritas</label>
-            <select id="editPrioritas" name="Prioritas" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Prioritas *</label>
+            <select id="editPrioritas" name="Prioritas" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
               <option value="Normal">Normal</option>
               <option value="Mendesak">Mendesak</option>
             </select>
@@ -202,17 +200,17 @@
 
         <div style="margin-bottom:12px;">
           <label style="display:block; font-weight:600; margin-bottom:6px;">Style</label>
-          <input type="text" id="editStyle" name="Style" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+          <input type="text" id="editStyle" name="Style" placeholder="Oxford, Derby, etc." style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <div style="margin-bottom:12px;">
           <label style="display:block; font-weight:600; margin-bottom:6px;">Custom Features</label>
-          <textarea id="editCustomFeatures" name="CustomFeatures" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; min-height:80px;"></textarea>
+          <textarea id="editCustomFeatures" name="CustomFeatures" rows="2" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></textarea>
         </div>
 
         <div style="margin-bottom:12px;">
           <label style="display:block; font-weight:600; margin-bottom:6px;">Special Requirements</label>
-          <textarea id="editSpecialRequirements" name="SpecialRequirements" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; min-height:80px;"></textarea>
+          <textarea id="editSpecialRequirements" name="SpecialRequirements" rows="2" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></textarea>
         </div>
 
         <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -225,7 +223,8 @@
   <script>
   function openEditCustomModal(orderId) {
     // SET FORM ACTION
-    document.getElementById('editCustomForm').action = `/pesanan/${orderId}`;
+    const form = document.getElementById('editCustomForm');
+    form.action = `/pesanan/${orderId}`;
 
     // Fetch latest orders (same approach as other modals) and fill form
     fetch('/debug/orders').then(r => r.json()).then(orders => {
@@ -235,29 +234,51 @@
         return;
       }
 
+      console.log('Order data:', order); // Debug log
+
       const custom = order.customDetail || {};
-      const note = custom.CatatanTambahan ? JSON.parse(custom.CatatanTambahan) : {};
+      let note = {};
+      
+      // Parse CatatanTambahan safely
+      try {
+        if (custom.CatatanTambahan) {
+          note = typeof custom.CatatanTambahan === 'string' 
+            ? JSON.parse(custom.CatatanTambahan) 
+            : custom.CatatanTambahan;
+        }
+      } catch (e) {
+        console.warn('Failed to parse CatatanTambahan:', e);
+        note = {};
+      }
 
-      // Isi form
-      document.getElementById('editCustomerName').value = order.customer?.Nama ?? "";
-      document.getElementById('editTanggal').value = order.Tanggal ? order.Tanggal.split('T')[0] : "";
-      document.getElementById('editTenggalSelesai').value = note.TenggalSelesai ? note.TenggalSelesai.split('T')[0] : (order.TenggalSelesai ?? "");
+      console.log('Custom detail:', custom); // Debug log
+      console.log('Parsed notes:', note); // Debug log
 
-      document.getElementById('editProductType').value = note.ProductType ?? custom.Model ?? "";
-      document.getElementById('editSize').value = note.Size ?? custom.Ukuran ?? "";
-      document.getElementById('editColor').value = note.Color ?? custom.Warna ?? "";
-      document.getElementById('editMaterial').value = note.Material ?? custom.JenisBahan ?? "";
+      // Isi form dengan data yang ada
+      document.getElementById('editCustomerName').value = order.customer?.Nama || '';
+      document.getElementById('editTanggal').value = order.Tanggal ? order.Tanggal.split('T')[0] : '';
+      
+      // Handle TenggalSelesai from multiple possible sources
+      const tenggat = note.TenggalSelesai || order.TenggalSelesai || '';
+      document.getElementById('editTenggalSelesai').value = tenggat ? (typeof tenggat === 'string' ? tenggat.split('T')[0] : tenggat) : '';
+
+      document.getElementById('editProductType').value = note.ProductType || custom.Model || '';
+      document.getElementById('editSize').value = note.Size || custom.Ukuran || '';
+      document.getElementById('editColor').value = note.Color || custom.Warna || '';
+      document.getElementById('editMaterial').value = note.Material || custom.JenisBahan || '';
 
       // Populate total price and deposit
-      document.getElementById('editTotalHarga').value = order.TotalHarga ?? 0;
-      document.getElementById('editDepositPaid').value = order.DepositPaid ?? 0;
+      document.getElementById('editTotalHarga').value = order.TotalHarga || 0;
+      document.getElementById('editDepositPaid').value = order.DepositPaid || 0;
 
-      document.getElementById('editStatusOrder').value = order.StatusOrder ?? "Tertunda";
-      document.getElementById('editPrioritas').value = order.Prioritas ?? "Normal";
+      document.getElementById('editStatusOrder').value = order.StatusOrder || 'Tertunda';
+      document.getElementById('editPrioritas').value = order.Prioritas || 'Normal';
 
-      document.getElementById('editStyle').value = note.Style ?? "";
-      document.getElementById('editCustomFeatures').value = note.CustomFeatures ?? "";
-      document.getElementById('editSpecialRequirements').value = note.SpecialRequirements ?? "";
+      document.getElementById('editStyle').value = note.Style || '';
+      document.getElementById('editCustomFeatures').value = note.CustomFeatures || '';
+      document.getElementById('editSpecialRequirements').value = note.SpecialRequirements || '';
+
+      console.log('Form filled successfully'); // Debug log
 
       // Tampilkan modal
       document.getElementById('editCustomModal').style.display = 'flex';

@@ -213,11 +213,128 @@ class OrderController extends Controller
             'StatusOrder' => 'nullable|string',
             'Prioritas' => 'nullable|string',
             'Tanggal' => 'nullable|date',
+            'TenggalSelesai' => 'nullable|date',
+            'TotalHarga' => 'nullable|numeric|min:0',
+            'DepositPaid' => 'nullable|numeric|min:0',
+            'CustomerName' => 'nullable|string|max:255',
+            
+            // Production fields
+            'ProductName' => 'nullable|string|max:255',
+            'Jumlah' => 'nullable|integer|min:1',
+            'TanggalMulai' => 'nullable|date',
+            'StatusProduksi' => 'nullable|string',
+            'Keterangan' => 'nullable|string',
+            'Size' => 'nullable|string',
+            'Color' => 'nullable|string',
+            'Material' => 'nullable|string',
+            
+            // Custom fields
+            'ProductType' => 'nullable|string|max:255',
+            'Style' => 'nullable|string',
+            'CustomFeatures' => 'nullable|string',
+            'SpecialRequirements' => 'nullable|string',
         ]);
 
-        $order->update($validated);
+        DB::beginTransaction();
+        try {
+            // Update customer if name provided
+            if (!empty($validated['CustomerName']) && $order->customer) {
+                $order->customer->update(['Nama' => $validated['CustomerName']]);
+            }
 
-        return redirect()->route('order')->with('success', 'Pesanan berhasil diupdate');
+            // Update order basic fields
+            $orderData = array_filter([
+                'StatusOrder' => $validated['StatusOrder'] ?? null,
+                'Prioritas' => $validated['Prioritas'] ?? null,
+                'Tanggal' => $validated['Tanggal'] ?? null,
+                'TotalHarga' => $validated['TotalHarga'] ?? null,
+                'DepositPaid' => $validated['DepositPaid'] ?? null,
+            ], function($value) { return $value !== null; });
+            
+            if (!empty($orderData)) {
+                $order->update($orderData);
+            }
+
+            // Update production order details
+            if ($order->orderDetails->count() > 0) {
+                $produksi = $order->produksi->first();
+                if ($produksi) {
+                    $produksiData = array_filter([
+                        'TanggalMulai' => $validated['TanggalMulai'] ?? null,
+                        'TanggalSelesai' => $validated['TenggalSelesai'] ?? null,
+                        'StatusProduksi' => $validated['StatusProduksi'] ?? null,
+                        'Keterangan' => $validated['Keterangan'] ?? null,
+                    ], function($value) { return $value !== null; });
+                    
+                    if (!empty($produksiData)) {
+                        $produksi->update($produksiData);
+                    }
+                }
+
+                // Update order details (first item)
+                $orderDetail = $order->orderDetails->first();
+                if ($orderDetail) {
+                    $detailData = array_filter([
+                        'Jumlah' => $validated['Jumlah'] ?? null,
+                        'Ukuran' => $validated['Size'] ?? null,
+                        'Warna' => $validated['Color'] ?? null,
+                        'JenisBahan' => $validated['Material'] ?? null,
+                    ], function($value) { return $value !== null; });
+                    
+                    if (!empty($detailData)) {
+                        $orderDetail->update($detailData);
+                        
+                        // Recalculate subtotal if quantity changed
+                        if (isset($detailData['Jumlah'])) {
+                            $orderDetail->Subtotal = $detailData['Jumlah'] * $orderDetail->HargaSatuan;
+                            $orderDetail->save();
+                        }
+                    }
+                }
+            }
+            
+            // Update custom order details
+            if ($order->customDetail) {
+                $customDetail = $order->customDetail;
+                
+                // Get existing notes
+                $existingNotes = [];
+                try {
+                    if ($customDetail->CatatanTambahan) {
+                        $existingNotes = json_decode($customDetail->CatatanTambahan, true) ?: [];
+                    }
+                } catch (\Exception $e) {
+                    $existingNotes = [];
+                }
+                
+                // Merge with new data
+                $newNotes = array_merge($existingNotes, array_filter([
+                    'ProductType' => $validated['ProductType'] ?? null,
+                    'Size' => $validated['Size'] ?? null,
+                    'Color' => $validated['Color'] ?? null,
+                    'Material' => $validated['Material'] ?? null,
+                    'Style' => $validated['Style'] ?? null,
+                    'CustomFeatures' => $validated['CustomFeatures'] ?? null,
+                    'SpecialRequirements' => $validated['SpecialRequirements'] ?? null,
+                    'TenggalSelesai' => $validated['TenggalSelesai'] ?? null,
+                ], function($value) { return $value !== null; }));
+                
+                $customDetail->update([
+                    'Ukuran' => $validated['Size'] ?? $customDetail->Ukuran,
+                    'Warna' => $validated['Color'] ?? $customDetail->Warna,
+                    'JenisBahan' => $validated['Material'] ?? $customDetail->JenisBahan,
+                    'Model' => $validated['ProductType'] ?? $customDetail->Model,
+                    'CatatanTambahan' => json_encode($newNotes),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('order')->with('success', 'Pesanan berhasil diupdate');
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            Log::error('Order update failed', ['error' => $ex->getMessage(), 'trace' => $ex->getTraceAsString()]);
+            return back()->withErrors(['error' => 'Gagal mengupdate pesanan: ' . $ex->getMessage()])->withInput();
+        }
     }
 
     public function destroy(Order $order)

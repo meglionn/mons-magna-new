@@ -240,7 +240,7 @@ function formatIDR($amount) {
               <tbody class="divide-y">
                 @forelse($topProducts as $product)
                 <tr>
-                  <td class="px-4 py-2">{{ $product->NamaProduk }}</td>
+                  <td class="px-4 py-2">{{ trim($product->NamaProduk) }}</td>
                   <td class="px-4 py-2">PRD-{{ str_pad($product->ProductID, 3, '0', STR_PAD_LEFT) }}</td>
                   <td class="px-4 py-2 text-right">{{ $product->total_quantity }}</td>
                   <td class="px-4 py-2 text-right">{{ formatIDR($product->total_revenue) }}</td>
@@ -255,26 +255,68 @@ function formatIDR($amount) {
           </div>
         </div>
 
-        {{-- Sales by Category - Based on top products --}}
+        {{-- Top 5 Best Selling Products --}}
         @if($topProducts->count() > 0)
         <div>
-          <h3 class="font-semibold mb-3">Top 5 Produk Terlaris</h3>
-          <div class="space-y-3">
-            @php
-              $totalTopRevenue = $topProducts->take(5)->sum('total_revenue');
-            @endphp
-            @foreach($topProducts->take(5) as $product)
-            <div>
-              <div class="flex justify-between text-sm">
-                <span>{{ $product->NamaProduk }}</span>
-                <span>{{ formatIDR($product->total_revenue) }} ({{ $totalTopRevenue > 0 ? number_format(($product->total_revenue / $totalTopRevenue) * 100, 0) : 0 }}%)</span>
-              </div>
-              <div class="h-2 bg-gray-200 rounded-full mt-1">
-                <div class="h-2 bg-blue-500 rounded-full" style="width: {{ $totalTopRevenue > 0 ? ($product->total_revenue / $totalTopRevenue) * 100 : 0 }}%"></div>
-              </div>
-            </div>
-            @endforeach
+          <h3 class="font-semibold mb-4">Top 5 Produk Terlaris</h3>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="min-w-full text-sm">
+              <thead class="bg-gradient-to-r from-blue-50 to-blue-100">
+                <tr>
+                  <th class="px-4 py-3 text-left font-semibold text-blue-900">Ranking</th>
+                  <th class="px-4 py-3 text-left font-semibold text-blue-900">Nama Produk</th>
+                  <th class="px-4 py-3 text-right font-semibold text-blue-900">Jumlah Terjual</th>
+                  <th class="px-4 py-3 text-right font-semibold text-blue-900">Total Penjualan</th>
+                  <th class="px-4 py-3 text-right font-semibold text-blue-900">Persentase</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                @php
+                  $topFive = $topProducts->take(5);
+                  $totalTopRevenue = $topFive->sum('total_revenue');
+                @endphp
+                @forelse($topFive as $index => $product)
+                @php
+                  $revenue = (float) $product->total_revenue ?? 0;
+                  $percentage = $totalTopRevenue > 0 ? number_format(($revenue / $totalTopRevenue) * 100, 1) : 0;
+                @endphp
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold">
+                      {{ $index + 1 }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 font-medium text-gray-800">{{ trim($product->NamaProduk) }}</td>
+                  <td class="px-4 py-3 text-right text-gray-600">{{ $product->total_quantity ?? 0 }} unit</td>
+                  <td class="px-4 py-3 text-right font-semibold text-green-600">{{ formatIDR($revenue) }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <div class="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" style="width: {{ $percentage }}%"></div>
+                      </div>
+                      <span class="font-semibold text-blue-600 min-w-max">{{ $percentage }}%</span>
+                    </div>
+                  </td>
+                </tr>
+                @empty
+                <tr>
+                  <td colspan="5" class="px-4 py-8 text-center text-gray-500">Tidak ada data produk terjual</td>
+                </tr>
+                @endforelse
+              </tbody>
+              <tfoot class="bg-gray-50 font-semibold border-t-2 border-gray-300">
+                <tr>
+                  <td colspan="3" class="px-4 py-3 text-right">Total Top 5:</td>
+                  <td class="px-4 py-3 text-right text-green-600">{{ formatIDR($totalTopRevenue) }}</td>
+                  <td class="px-4 py-3 text-right text-blue-600">100%</td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
+        </div>
+        @else
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <p class="text-blue-700 text-center">Tidak ada data penjualan produk untuk ditampilkan</p>
         </div>
         @endif
       </div>

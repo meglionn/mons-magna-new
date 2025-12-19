@@ -96,12 +96,6 @@
       :class="tab === 'expense' ? 'font-semibold border-b-2 border-black' : 'text-gray-500'"
       class="pb-2"
     >Analisis Pengeluaran</button>
-
-    <button 
-      @click="tab = 'reports'"
-      :class="tab === 'reports' ? 'font-semibold border-b-2 border-black' : 'text-gray-500'"
-      class="pb-2"
-    >Laporan</button>
   </div>
 
   {{-- TAB: TRANSAKSI --}}
@@ -302,101 +296,6 @@
             @endforelse
           </tbody>
         </table>
-      </div>
-    </div>
-  </div>
-
-  {{-- TAB: LAPORAN --}}
-  <div x-show="tab === 'reports'" class="space-y-6">
-    
-    {{-- Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
-        <h4 class="text-sm font-medium text-green-700 mb-2">Total Pendapatan</h4>
-        <p class="text-3xl font-bold text-green-900">{{ number_format($stats['totalIncome'], 0, ',', '.') }}</p>
-        <p class="text-xs text-green-600 mt-2">{{ $transactions->where('JenisTransaksi', 'Pemasukan')->count() }} transaksi</p>
-      </div>
-      
-      <div class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-xl p-6">
-        <h4 class="text-sm font-medium text-red-700 mb-2">Total Pengeluaran</h4>
-        <p class="text-3xl font-bold text-red-900">{{ number_format($stats['totalExpenses'], 0, ',', '.') }}</p>
-        <p class="text-xs text-red-600 mt-2">{{ $transactions->where('JenisTransaksi', 'Pengeluaran')->count() }} transaksi</p>
-      </div>
-      
-      <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
-        <h4 class="text-sm font-medium text-blue-700 mb-2">Keuntungan Bersih</h4>
-        <p class="text-3xl font-bold text-blue-900">{{ number_format($stats['netProfit'], 0, ',', '.') }}</p>
-        <p class="text-xs text-blue-600 mt-2">Margin: {{ $stats['profitMargin'] }}%</p>
-      </div>
-    </div>
-
-    {{-- Top Categories --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white border rounded-xl p-6">
-        <h3 class="text-lg font-semibold mb-4 text-green-700">Top Kategori Pendapatan</h3>
-        <div class="space-y-3">
-          @forelse($incomeByCategory->sortByDesc('total')->take(5) as $item)
-          <div class="flex justify-between items-center">
-            <span class="font-medium">{{ $item->Kategori ?: 'Tidak ada kategori' }}</span>
-            <div class="text-right">
-              <div class="text-green-600 font-semibold">{{ number_format($item->total, 0, ',', '.') }}</div>
-              <div class="text-xs text-gray-500">{{ $item->count }} transaksi</div>
-            </div>
-          </div>
-          @empty
-          <p class="text-gray-500 text-center py-4">Tidak ada data</p>
-          @endforelse
-        </div>
-      </div>
-
-      <div class="bg-white border rounded-xl p-6">
-        <h3 class="text-lg font-semibold mb-4 text-red-700">Top Kategori Pengeluaran</h3>
-        <div class="space-y-3">
-          @forelse($expensesByCategory->sortByDesc('total')->take(5) as $item)
-          <div class="flex justify-between items-center">
-            <span class="font-medium">{{ $item->Kategori ?: 'Tidak ada kategori' }}</span>
-            <div class="text-right">
-              <div class="text-red-600 font-semibold">{{ number_format($item->total, 0, ',', '.') }}</div>
-              <div class="text-xs text-gray-500">{{ $item->count }} transaksi</div>
-            </div>
-          </div>
-          @empty
-          <p class="text-gray-500 text-center py-4">Tidak ada data</p>
-          @endforelse
-        </div>
-      </div>
-    </div>
-
-    {{-- Payment Methods Summary --}}
-    <div class="bg-white border rounded-xl p-6">
-      <h3 class="text-lg font-semibold mb-4">Ringkasan Metode Pembayaran</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h4 class="font-medium text-green-700 mb-3">Pendapatan</h4>
-          <div class="space-y-2">
-            @forelse($incomeByPayment as $item)
-            <div class="flex justify-between">
-              <span>{{ $item->MetodePembayaran }}</span>
-              <span class="font-semibold text-green-600">{{ number_format($item->total, 0, ',', '.') }}</span>
-            </div>
-            @empty
-            <p class="text-gray-500 text-sm">Tidak ada data</p>
-            @endforelse
-          </div>
-        </div>
-        <div>
-          <h4 class="font-medium text-red-700 mb-3">Pengeluaran</h4>
-          <div class="space-y-2">
-            @forelse($expensesByPayment as $item)
-            <div class="flex justify-between">
-              <span>{{ $item->MetodePembayaran }}</span>
-              <span class="font-semibold text-red-600">{{ number_format($item->total, 0, ',', '.') }}</span>
-            </div>
-            @empty
-            <p class="text-gray-500 text-sm">Tidak ada data</p>
-            @endforelse
-          </div>
-        </div>
       </div>
     </div>
   </div>

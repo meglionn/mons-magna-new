@@ -6,15 +6,14 @@
       <p class="text-gray-600">Pantau dan kelola pesanan produksi sepatu</p>
     </div>
     <div x-data="{ showProductionDialog: false }" class="p-6">
-
-  {{-- Tombol buka modal --}}
-  <button 
-    @click="showProductionDialog = true"
-    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-    + Pesanan Produksi Baru
-  </button>
-  @include('partials.productionorderdialog')
-</div>
+      {{-- Tombol buka modal --}}
+      <button 
+        @click="showProductionDialog = true"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        + Pesanan Produksi Baru
+      </button>
+      @include('partials.productionorderdialog')
+    </div>
   </div>
 
   {{-- Filter --}}
@@ -98,7 +97,7 @@
               <td class="px-4 py-2 text-right">
                 <div class="flex justify-end gap-2">
                   <button 
-                    @click="openEditProductionModal({{ $order->OrderID }})"
+                    onclick="openEditProductionModal({{ $order->OrderID }})"
                     class="text-blue-600 hover:text-blue-800 text-lg">
                     ✏️
                   </button>
@@ -123,76 +122,79 @@
   </div>
 
   {{-- Edit Production Order Modal --}}
-  <div x-data="{ editModal: false, editData: {} }" @open-edit-modal.window="editModal = true; editData = $event.detail" style="display: none;" x-show="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl max-h-96 overflow-y-auto">
-      <h3 class="text-lg font-semibold mb-4">Edit Pesanan Produksi</h3>
-      <form :action="'/pesanan/' + editData.id" method="POST">
+  <div id="editProductionModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 24px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+      <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Edit Pesanan Produksi</h3>
+      <form id="editProductionForm" method="POST">
         @csrf
         @method('PUT')
         
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Nama Pelanggan *</label>
+          <input type="text" id="editProdCustomerName" name="CustomerName" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Nama Produk *</label>
+          <select id="editProdProductID" name="ProductID" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+            <option value="">Pilih produk</option>
+            @foreach($products as $product)
+              <option value="{{ $product->ProductID }}">{{ $product->NamaProduk }} - IDR {{ number_format($product->Harga) }}</option>
+            @endforeach
+            <option value="__other">Lainnya...</option>
+          </select>
+
+          <input type="text" id="editProdProductName" name="ProductName" style="display:none; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px; margin-top:8px;" placeholder="Nama produk baru atau custom">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Nama Pelanggan</label>
-            <input type="text" name="CustomerName" :value="editData.customerName" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Tanggal Pesanan *</label>
+            <input type="date" id="editProdTanggal" name="Tanggal" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Nama Produk</label>
-            <input type="text" name="ProductName" :value="editData.productName" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Jumlah *</label>
+            <input type="number" id="editProdJumlah" name="Jumlah" required min="1" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Tanggal Pesanan</label>
-            <input type="date" name="Tanggal" :value="editData.tanggal" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Total Harga (IDR) *</label>
+            <input type="number" id="editProdTotalHarga" name="TotalHarga" required min="0" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Jumlah</label>
-            <input type="number" name="Jumlah" :value="editData.jumlah" min="1" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Ukuran (Size)</label>
-            <select type="text" name="Size" :value="editData.size || ''" placeholder="42" class="w-full border border-gray-300 rounded px-3 py-2">
-            <option value="36">36</option>
-            <option value="37" selected>37</option>
-            <option value="38">38</option>
-            <option value="39">39</option>
-            <option value="40">40</option>
-            <option value="41">41</option>
-            <option value="42">42</option>
-            <option value="43">43</option>
-            <option value="44">44</option>
-            <option value="45">45</option>
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Ukuran *</label>
+            <select id="editProdUkuran" name="Ukuran" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+              <option value="36">36</option>
+              <option value="37">37</option>
+              <option value="38">38</option>
+              <option value="39">39</option>
+              <option value="40">40</option>
+              <option value="41">41</option>
+              <option value="42">42</option>
+              <option value="43">43</option>
+              <option value="44">44</option>
+              <option value="45">45</option>
             </select>
           </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Warna (Color)</label>
-            <input type="text" name="Color" :value="editData.color || ''" placeholder="Black" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Tanggal Mulai Produksi *</label>
+            <input type="date" id="editProdTanggalMulai" name="TanggalMulai" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Material</label>
-            <input type="text" name="Material" :value="editData.material || ''" placeholder="Leather" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Target Selesai</label>
+            <input type="date" id="editProdTenggalSelesai" name="TenggalSelesai" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div>
-            <label class="block text-sm font-medium mb-1">Tanggal Mulai Produksi</label>
-            <input type="date" name="TanggalMulai" :value="editData.tanggalMulai" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Target Selesai</label>
-            <input type="date" name="TenggalSelesai" :value="editData.tenggalSelesai" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Status Order</label>
-            <select name="StatusOrder" :value="editData.statusOrder || editData.StatusOrder || ''" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Status Order *</label>
+            <select id="editProdStatusOrder" name="StatusOrder" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
               <option value="Pending">Pending</option>
               <option value="Proses">Dalam Proses</option>
               <option value="Produksi">Produksi</option>
@@ -201,8 +203,8 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Status Produksi</label>
-            <select name="StatusProduksi" :value="editData.statusProduksi || editData.StatusProduksi || ''" class="w-full border border-gray-300 rounded px-3 py-2">
+            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Status Produksi *</label>
+            <select id="editProdStatusProduksi" name="StatusProduksi" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
               <option value="Pending">Pending</option>
               <option value="Pemotongan Pola">Pemotongan Pola</option>
               <option value="Persiapan Kulit">Persiapan Kulit</option>
@@ -216,30 +218,24 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Prioritas</label>
-            <select name="Prioritas" :value="editData.prioritas || editData.Prioritas || ''" class="w-full border border-gray-300 rounded px-3 py-2">
-              <option value="Rendah">Rendah</option>
-              <option value="Sedang">Sedang</option>
-              <option value="Tinggi">Tinggi</option>
-              <option value="Mendesak">Mendesak</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Total Harga</label>
-            <input type="number" name="TotalHarga" :value="editData.totalHarga" class="w-full border border-gray-300 rounded px-3 py-2">
-          </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Prioritas *</label>
+          <select id="editProdPrioritas" name="Prioritas" required style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;">
+            <option value="Rendah">Rendah</option>
+            <option value="Sedang">Sedang</option>
+            <option value="Tinggi">Tinggi</option>
+            <option value="Mendesak">Mendesak</option>
+          </select>
         </div>
 
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Catatan</label>
-          <textarea name="Keterangan" x-text="editData.keterangan || editData.Keterangan || ''" class="w-full border border-gray-300 rounded px-3 py-2" rows="3"></textarea>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px;">Catatan</label>
+          <textarea id="editProdKeterangan" name="Keterangan" rows="3" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 14px;"></textarea>
         </div>
 
-        <div class="flex gap-2">
-          <button type="button" @click="editModal = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Batal</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Simpan</button>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" onclick="closeEditProductionModal()" style="padding: 8px 16px; background: #d1d5db; color: #374151; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Batal</button>
+          <button type="submit" style="padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Simpan</button>
         </div>
       </form>
     </div>
@@ -253,24 +249,78 @@
           const produksi = order.produksi && order.produksi.length > 0 ? order.produksi[0] : {};
           const orderDetail = order.orderDetails && order.orderDetails.length > 0 ? order.orderDetails[0] : {};
           const product = orderDetail.product || {};
-          window.dispatchEvent(new CustomEvent('open-edit-modal', { 
-            detail: { 
-              id: orderId, 
-              customerName: order.customer?.Nama || '',
-              productName: product?.NamaProduk || '',
-              tanggal: order.Tanggal,
-              tanggalMulai: produksi?.TanggalMulai || '',
-              tenggalSelesai: produksi?.TanggalSelesai || '',
-              jumlah: orderDetail?.Jumlah || 1,
-              keterangan: produksi?.Keterangan || '',
-              statusOrder: order.StatusOrder || '',
-              statusProduksi: produksi?.StatusProduksi || '',
-              prioritas: order.Prioritas || '',
-              size: product?.Ukuran || ''
-            } 
-          }));
+
+          const form = document.getElementById('editProductionForm');
+          form.action = '/pesanan/' + orderId;
+
+          document.getElementById('editProdCustomerName').value = order.customer?.Nama || '';
+
+          // Populate product select + fallback name input
+          const prodSelect = document.getElementById('editProdProductID');
+          const prodNameInput = document.getElementById('editProdProductName');
+
+          if (product?.ProductID) {
+            prodSelect.value = product.ProductID;
+            prodNameInput.style.display = 'none';
+            prodNameInput.removeAttribute('required');
+            prodNameInput.value = '';
+          } else if (product?.NamaProduk) {
+            // product exists in payload only by name
+            prodSelect.value = '__other';
+            prodNameInput.style.display = 'block';
+            prodNameInput.value = product.NamaProduk;
+            prodNameInput.setAttribute('required', 'required');
+          } else {
+            prodSelect.value = '';
+            prodNameInput.style.display = 'none';
+            prodNameInput.value = '';
+            prodNameInput.removeAttribute('required');
+          }
+
+          document.getElementById('editProdTanggal').value = order.Tanggal ? order.Tanggal.split('T')[0] : '';
+          document.getElementById('editProdJumlah').value = orderDetail?.Jumlah || 1;
+          document.getElementById('editProdTotalHarga').value = order.TotalHarga || orderDetail?.Subtotal || 0;
+          document.getElementById('editProdUkuran').value = product?.Ukuran || orderDetail?.Ukuran || '37';
+          document.getElementById('editProdTanggalMulai').value = produksi?.TanggalMulai ? produksi.TanggalMulai.split('T')[0] : '';
+          document.getElementById('editProdTenggalSelesai').value = produksi?.TanggalSelesai ? produksi.TanggalSelesai.split('T')[0] : '';
+          document.getElementById('editProdStatusOrder').value = order.StatusOrder || 'Pending';
+          document.getElementById('editProdStatusProduksi').value = produksi?.StatusProduksi || 'Pending';
+          document.getElementById('editProdPrioritas').value = order.Prioritas || 'Sedang';
+          document.getElementById('editProdKeterangan').value = produksi?.Keterangan || '';
+
+          document.getElementById('editProductionModal').style.display = 'flex';
         }
       });
     }
+
+    function closeEditProductionModal() {
+      document.getElementById('editProductionModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('editProductionModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditProductionModal();
+      }
+    });
+
+    // Toggle showing product name input when user selects 'Lainnya...'
+    function toggleEditProductName(selectEl) {
+      const nameInput = document.getElementById('editProdProductName');
+      if (selectEl.value === '__other') {
+        nameInput.style.display = 'block';
+        nameInput.setAttribute('required', 'required');
+      } else {
+        nameInput.style.display = 'none';
+        nameInput.value = '';
+        nameInput.removeAttribute('required');
+      }
+    }
+
+    // Wire change event for the product select (in case of manual changes)
+    document.addEventListener('DOMContentLoaded', function() {
+      const prodSelect = document.getElementById('editProdProductID');
+      if (prodSelect) prodSelect.addEventListener('change', function() { toggleEditProductName(this); });
+    });
   </script>
 </div>

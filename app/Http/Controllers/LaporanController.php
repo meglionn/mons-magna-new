@@ -110,7 +110,7 @@ class LaporanController extends Controller
 
         $lowStockMaterials = $materials->where('StokBahan', '>', 0)->where('StokBahan', '<', 10);
 
-        // TOP PRODUCTS
+        // TOP PRODUCTS - Menggunakan TotalHarga dari Orders
         $topProductsQuery = DB::table('orderdetails')
             ->join('products', 'orderdetails.ProductID', '=', 'products.ProductID')
             ->join('orders', 'orderdetails.OrderID', '=', 'orders.OrderID')
@@ -118,7 +118,7 @@ class LaporanController extends Controller
                 'products.ProductID',
                 'products.NamaProduk',
                 DB::raw('SUM(orderdetails.Jumlah) as total_quantity'),
-                DB::raw('SUM(orderdetails.Subtotal) as total_revenue')
+                DB::raw('SUM(CASE WHEN orders.TotalHarga > 0 THEN (orders.TotalHarga / (SELECT COUNT(*) FROM orderdetails od WHERE od.OrderID = orders.OrderID)) ELSE 0 END) as total_revenue')
             );
         
         if ($startDate) {
